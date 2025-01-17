@@ -1,0 +1,26 @@
+'*******************
+' Format for gamepak
+'*******************
+' ident:word                ;"QK"
+' numlevels:word            ;Number of levels-1, must not be <0
+' leveloffs:word[]          ;level offsets from beginning of gamepak
+' levels.....
+'*******************
+' Format for level
+'*******************
+' hiscore:word              ;XX
+' hiscorename:char[4]       ;XXXX
+' minmoves:word		        ;minimum moves
+' besttime:word             ;best time
+' specmask:byte             ;Mask for the special locations (bit 1=p1, bit 2=p2, bit 3=p3, bit 4=p4, bit 5=end)
+' x,y:byte[0]               ;Special locations coordinates array (2 bytes for each bit on specmask, read from low to high)
+' NumObjects:byte           ;Number of objects
+' objects:dword[0]          ;Array of objects
+'       $00 - Left coordinate
+'       $00 - Top coordinate
+'       $00 - Width if it is a moveblock, zero if it is a spin block
+'       $00 - Height if it is a moveblock, edges if it is a spinblock (bit 1=left,bit 2=top,bit 3=right,bit 4=bottom)
+' numboards:byte            ;Number of boards
+' l,t,w,h,m:byte            ;Width and height of image, w has to be divisable by 4, m is bits to set
+' board:byte[0]             ;Board, each bit is a value, the data is reversed
+'*******************

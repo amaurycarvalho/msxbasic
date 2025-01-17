@@ -1,0 +1,7 @@
+https://www.msx.org/wiki/SOUND
+https://marmsx.msxall.com/projetos/dsg/index.php
+https://marmsx.msxall.com/projetos/dsg/tutorial.php
+https://marmsx.msxall.com/projetos/dsg/players.php
+
+SOUND <channel>,<volume>,<frequence>
+
