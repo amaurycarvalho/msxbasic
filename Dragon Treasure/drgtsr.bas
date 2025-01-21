@@ -130,13 +130,13 @@ FILE "img/SPRITES2.SPR"                 ' 7 - sprites 2
 8061 RETURN
 
 ' LOAD SCREEN, MUSIC AND SPRITES
-9000 CMD DISSCR 
-9001 SCREEN LOAD SC%
-9002 SPRITE LOAD SP%
+9000 SCREEN OFF                 ' disable screen
+9001 SCREEN LOAD SC%            ' load screen resource SC
+9002 SPRITE LOAD SP%            ' load sprite resource SP
 9003 IF SC% <> 2 GOSUB 9050
-9004 CMD PLYSONG MU%
-9005 CMD PLYPLAY
-9006 CMD ENASCR
+9004 CMD PLYSONG MU%            ' set song MU
+9005 CMD PLYPLAY                ' play song
+9006 SCREEN ON                  ' enable screen
 9007 RETURN
 
 ' SET LEVEL FOOTER
