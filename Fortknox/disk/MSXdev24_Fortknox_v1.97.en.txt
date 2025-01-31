@@ -1,0 +1,68 @@
+FORT KNOX USER MANUAL
+
+- SYSTEM REQUIREMENTS -
+MSX1 with 32KB RAM and 16K VRAM
+
+- PURPOSE OF THE GAME -
+
+FORT KNOX is a remake of Bagman, an arcade video game
+released in 1982 by the French Valadon
+Automation, also with the title Le bagnard (“the prisoner”),
+and in the USA by Stern Electronics under license.
+It features an escaped convict intent on stealing
+bags of gold from a mine (bagman in English
+is a nickname for someone who transports money for the
+underworld).
+The player controls the convict, with the classic
+striped suit, with the objective of collecting the
+bags of gold scattered around the mine and transporting them
+one at a time to the surface, where he deposits them
+in a wheelbarrow. The mine is seen in profile section and is composed of eight screens for each
+game level, connected horizontally.
+Each screen is a tangle of horizontal and
+vertical tunnels, connected by vertical ladders. Some
+horizontal tunnels are traveled by static
+rail carts.
+But be careful of the large condor bird that guards
+this gold mine, throwing heavy eggs, if
+it touches you, you will lose a life. The convict can also
+move the wheelbarrow horizontally. There are also
+some bars on the ceiling from which the convict can
+hang.
+In addition to the joystick for movement in four
+directions, there is only one button to
+perform all the actions described above.
+The soundtrack is based on the
+popular song Turkey in the Straw.
+
+- CONTROLS -
+
+DIRECTION: cursor keys or joystick in port 1
+space bar or fire key (A) for
+action (takes the sack, leaves the sack
+on the wheelbarrow, hang on the hook).
+
+- SCORES -
+
+For each sack placed on the wheelbarrow you get 500 points.
+
+- EXTRA LIFE BONUS -
+
+When you reach every 30000 points you will get an additional life,
+a sound effect will confirm it.
+
+- GAMEPLAY TECHNIQUE -
+
+A part of this fabulous video game was written in BASIC, but the
+GAMEPLAY remains quite fast because for the movement of the convict player1
+is managed by a routine in machine code, after which all the management
+of the great condor bird is managed by a powerful routine in machine code,
+even when he throws the heavy egg it is a software sprite, in order to avoid that
+they exceed 4 sprites per line.
+
+The Z80 assembler routine of the big bird CONDOR was designed by Danysoft,
+as a credit to him.
+
+This manual accompanies the DSK of the game CATBOX.
+
+Open source Freeware License (c) 2025 GAMECAST Entertainment.
