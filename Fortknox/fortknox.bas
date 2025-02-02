@@ -73,9 +73,9 @@ FILE "img/fortknox3.spr"                                ' 7 - sprites bank - pla
 50 GOSUB 9050                                           ' load tiles bank 
 51 PX = 16 : PY = 28 : PS = 0 : GOSUB 8050              ' show player sprite
 52 CX = 10 : CY = 60 : CS = 0 : GOSUB 8060              ' show condor sprite
-54 N = 144 : X = 2 : Y = 12 : GOSUB 8010                ' draw tile 2x1
-55 N = 146 : Y = 12 : GOSUB 8010
-56 N = 162 : Y = 15 : GOSUB 8010
+54 N = &H90 : X = 2 : Y = 11 : GOSUB 8010               ' draw bag top (tile 2x1)
+55 N = &H92 : Y = 12 : GOSUB 8010                       ' draw bag bottom (tile 2x1)
+56 N = &HA2 : Y = 15 : GOSUB 8010                       ' draw car
 57 LOCATE 6, 4 : PRINT "player1"
 58 LOCATE 6, 8 : PRINT "bird condor"
 59 LOCATE 6,12 : PRINT "bag"
@@ -93,7 +93,7 @@ FILE "img/fortknox3.spr"                                ' 7 - sprites bank - pla
 103 LOCATE 13,10 : PRINT "STAGE";ST
 104 LOCATE 14,12 : PRINT "READY"
 105 I = 4 : GOSUB 9020                                   ' wait 4 seconds
-106 BF = 0 : GOSUB 8200                                  ' player bag flag (0=handsfree, 1=carrying bag)
+106 BF = 0 : GOSUB 8200                                  ' player action flag (0=handsfree, 1=holding the bag, 2=pushing the car)
 107 BC = 65                                              ' bags count
 108 GOSUB 8100                                           ' load stage scenes bank
 
@@ -131,7 +131,7 @@ FILE "img/fortknox3.spr"                                ' 7 - sprites bank - pla
 220 IF PS = 2 THEN PS = 6 ELSE PS = 2                    ' --> player moves UP 
 221 IF PY <= 15 THEN RETURN
 222   GOSUB 270                                          ' get up/down tiles
-223   IF TU1 <> &H88 THEN RETURN                         ' if not a ladder, return
+223   IF TU1 <> &H88 OR BF = 2 THEN RETURN               ' if not a ladder (or pushing the car), return
 224     PY = PY - 8
 225     GOTO 8050                                        ' show player sprite
 
@@ -149,7 +149,7 @@ FILE "img/fortknox3.spr"                                ' 7 - sprites bank - pla
 240 IF PS = 2 THEN PS = 6 ELSE PS = 2                    ' --> player moves DOWN 
 241 IF PY >= 170 THEN RETURN
 242   GOSUB 270                                          ' get up/down tiles
-243   IF TD1 <> &H88 THEN RETURN                         ' if not a ladder, return
+243   IF TD1 <> &H88 OR BF = 2 THEN RETURN               ' if not a ladder (or pushing the car), return
 244     PY = PY + 8
 245     GOTO 8050                                        ' show player sprite
 
@@ -230,34 +230,52 @@ FILE "img/fortknox3.spr"                                ' 7 - sprites bank - pla
 705     EY = 212 
 706     GOTO 8070                                        ' hide egg
 
-' Player getting an item (bag)
+' Player trying to get an item 
 800 GOSUB 280                                            ' get inner tiles from player position
-801 IF BF = 1 THEN 810
-802   IF TP1 <> &H90 THEN RETURN                         ' if not a bag, return
-803     GOSUB 8015                                       ' clear bag tile 
-804     GOSUB 8110                                       ' register getting the bag on the scene buffer
-805     CMD PLYSOUND 4                                   ' play getting an item sound effect
-806     BF = 1 : GOSUB 8200                              ' player carryng the bag flag
-807     GOTO 8050                                        ' show player sprite
+801 ON BF GOTO 820, 860                                  ' player action status (0=handsfree, 1=holding the bag, 2=pushing the car)
+802   IF TP2 = &HA2 THEN 850                             ' is it the car?
+803     IF TP1 <> &H90 THEN RETURN                       ' if not a bag, return
 
-' Carrying bag logic
-810 IF TP2 = &HA2 OR TP2 = &HA3 THEN 820                 ' if car tile, release the bag
-811 IF TPS <> 32 AND TPS <> 0 THEN RETURN                ' if not an empty space, return
-812   N = &H90 : GOSUB 8090                              ' release the bag on the floor
-813   GOSUB 8120                                         ' register releasing the bag on the scene buffer
-814   BF = 0 : GOSUB 8200                                ' player handsfree flag
-815   CMD PLYSOUND 4                                     ' play release the bag sound effect
-816   GOTO 8050                                          ' show player sprite
+' Getting the bag logic
+810       GOSUB 8015                                     ' clear bag tile 
+811       GOSUB 8110                                     ' register getting the bag on the scene buffer
+812       CMD PLYSOUND 4                                 ' play getting an item sound effect
+813       BF = 1 : GOSUB 8200                            ' player holding the bag
+814       GOTO 8050                                      ' show player sprite
+
+' Releasing the bag logic
+820 IF TP2 = &HA2 OR TP2 = &HA3 THEN 830                 ' if car tile, release the bag
+821   IF TPS <> 32 AND TPS <> 0 THEN RETURN              ' if not an empty space, return
+822     N = &H90 : GOSUB 8090                            ' release the bag on the floor
+823     GOSUB 8120                                       ' register releasing the bag on the scene buffer
+824     BF = 0 : GOSUB 8200                              ' player handsfree flag
+825     CMD PLYSOUND 4                                   ' play release an item sound effect
+826     GOTO 8050                                        ' show player sprite
 
 ' Release the bag in the car logic
-820 BF = 0 : GOSUB 8200                                  ' player handsfree flag
-821 GOSUB 8050                                           ' show player sprite
-822 CMD PLYSOUND 4                                       ' play release the bag sound effect      
+830 BF = 0 : GOSUB 8200                                  ' player handsfree flag
+831 GOSUB 8050                                           ' show player sprite
+832 CMD PLYSOUND 4                                       ' play release an item sound effect      
 
 ' Add score and reduce bags count
-850 SC = SC + 1                                          ' add to score points
-851 IF BC > 0 THEN BC = BC - 1                           ' reduce bags count
-852 GOTO 8020                                            ' print score/hi-score
+840 SC = SC + 1                                          ' add to score points
+841 IF BC > 0 THEN BC = BC - 1                           ' reduce bags count
+842 GOTO 8020                                            ' print score/hi-score
+
+' Getting the car logic
+850 GOSUB 8015                                           ' clear car tile 
+851 GOSUB 8110                                           ' register getting the car on the scene buffer
+852 CMD PLYSOUND 4                                       ' play getting an item sound effect
+853 BF = 2 : GOSUB 8200                                  ' player holding the bag
+854 GOTO 8050                                            ' show player sprite
+ 
+' Releasing the car logic
+860 IF TPS <> 32 AND TPS <> 0 THEN RETURN                ' if not an empty space, return
+861   N = &HA2 : Y = Y + 1 : GOSUB 8010                  ' release the car on the floor
+862   GOSUB 8130                                         ' register releasing the car on the scene buffer
+863   BF = 0 : GOSUB 8200                                ' player handsfree flag
+864   CMD PLYSOUND 4                                     ' play release an item sound effect
+865   GOTO 8050                                          ' show player sprite
 
 ' Stage clear
 900 ST = ST + 1 : SCN = 1
@@ -379,6 +397,13 @@ FILE "img/fortknox3.spr"                                ' 7 - sprites bank - pla
 8124 POKE BUF+32, &H92
 8125 POKE BUF+33, &H93
 8126 RETURN
+
+' Register release the car in the scene buffer
+8130 N = ((Y - 2) * 32 + X)                             ' element on scenes buffer
+8131 BUF = VARPTR(SCA(0, SCN-1)) + N
+8132 POKE BUF, &HA2
+8133 POKE BUF+1, &HA3
+8134 RETURN
 
 ' Load sprite bank (player handsfree, holding the bag, pushing the car)
 8200 SPRITE LOAD 5 + BF
