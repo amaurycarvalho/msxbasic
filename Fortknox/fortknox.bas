@@ -30,7 +30,7 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 
 ' Initialization
 1 DEFINT A-Z
-2 DIM SCA(7,351)                                        ' scenes array buffer (8 scenes x 704 bytes)
+2 DIM SCA(351,7)                                        ' scenes data buffer (screen data=704 bytes, 8 scenes)
 3 CMD PLYLOAD 0, 1                                      ' load music and effects from resources 0/1
 4 SCREEN 1,2,0 : COLOR 15,0,0 
 5 HI=512 : SC = 0 : TI = TIME : SN = 0 : MUS = 99       ' HI = high score, SC = score
@@ -93,6 +93,7 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 105 I = 4 : GOSUB 9020                                   ' wait 4 seconds
 106 BF = 0                                               ' player bag flag (0=handsfree, 1=carrying bag)
 107 BC = 65                                              ' bags count
+108 GOSUB 8100                                           ' load stage scenes bank
 
 ' Scene initialization 
 110 PX = 0 : PY = 15 : PS = 1                            ' player x, y and sprite
@@ -232,17 +233,19 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 801 IF BF = 1 THEN 810
 802   IF TP1 <> &H90 THEN RETURN                         ' if not a bag, return
 803     GOSUB 8015                                       ' clear bag tile 
-804     CMD PLYSOUND 4                                   ' play getting an item sound effect
-805     BF = 1                                           ' player carryng the bag flag
-806     GOTO 8050                                        ' show player sprite
+804     GOSUB 8110                                       ' register getting the bag on the scene buffer
+805     CMD PLYSOUND 4                                   ' play getting an item sound effect
+806     BF = 1                                           ' player carryng the bag flag
+807     GOTO 8050                                        ' show player sprite
 
 ' Carrying bag logic
 810 IF TP2 = &HA2 OR TP2 = &HA3 THEN 820                 ' if car tile, release the bag
 811 IF TPS <> 32 AND TPS <> 0 THEN RETURN                ' if not an empty space, return
 812   N = &H90 : GOSUB 8090                              ' release the bag on the floor
-813   BF = 0                                             ' player handsfree flag
-814   CMD PLYSOUND 4                                     ' play release the bag sound effect
-815   GOTO 8050                                          ' show player sprite
+813   GOSUB 8120                                         ' register releasing the bag on the scene buffer
+814   BF = 0                                             ' player handsfree flag
+815   CMD PLYSOUND 4                                     ' play release the bag sound effect
+816   GOTO 8050                                          ' show player sprite
 
 ' Release the bag in the car logic
 820 BF = 0                                               ' player handsfree flag
@@ -303,16 +306,9 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 8022 RETURN
 
 ' Draw stage ST - scene SCN
-8030 CMD RESTORE 2 + ((ST - 1) MOD 2)                   ' load level data file
-8031 IRESTORE 37 + (SCN-1)*704                          ' set initial read position on level data file
-8032 BUF = HEAP()                                       ' RAM buffer (next free space available)
-8033 FOR N=0 TO 352                                     ' scene data loop (read two bytes of level data each time)
-8034   IREAD B                                          ' read next integer data
-8035   POKE BUF, (B AND 255) : BUF = BUF + 1            ' copy lower part to RAM buffer
-8036   POKE BUF, (B SHR 8) : BUF = BUF + 1              ' copy higher part to RAM buffer
-8037 NEXT
-8038 CMD RAMTOVRAM BUF - 704, BASE(5)+64, 704           ' copy screen from RAM buffer to VRAM (name table position, line 2)
-8039 GOSUB 8020                                         ' print score/hi-score
+8030 BUF = VARPTR(SCA(0,SCN-1))                          ' start address of element SCENE,SCREEN_INTEGER
+8031 CMD RAMTOVRAM BUF, BASE(5)+64, 704                  ' copy screen from RAM buffer to VRAM (name table position, line 2)
+8032 GOSUB 8020                                          ' print score/hi-score
 
 ' Print stage/scene
 8040 LOCATE 27,0 : PRINT "SCENE";
@@ -354,6 +350,34 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 8093 PUT TILE N+3,(X+1,Y+1)
 8094 RETURN
 
+' Load stage scenes bank to RAM buffer
+8100 CMD RESTORE 2 + ((ST - 1) MOD 2)                    ' load stage data file
+8101 IRESTORE 39                                         ' set initial read position on stage data file
+8102 FOR Y = 0 TO 7                                      ' scenes data loop 
+8103   FOR X = 0 TO 351                                  ' screen from scene data loop
+8104     IREAD SCA(X,Y)                                  ' read next integer data to scenes buffer (screen_data,scene)
+8105   NEXT
+8106 NEXT
+8107 RETURN
+
+' Register getting the bag in the scene buffer
+8110 N = ((Y - 2) * 32 + X)                              ' element on scenes buffer
+8111 BUF = VARPTR(SCA(0, SCN-1)) + N
+8112 POKE BUF, &H20
+8113 POKE BUF+1, &H20
+8114 POKE BUF+32, &H20
+8115 POKE BUF+33, &H20
+8116 RETURN
+
+' Register release the bag in the scene buffer
+8120 N = ((Y - 2) * 32 + X)                             ' element on scenes buffer
+8121 BUF = VARPTR(SCA(0, SCN-1)) + N
+8122 POKE BUF, &H90
+8123 POKE BUF+1, &H91
+8124 POKE BUF+32, &H92
+8125 POKE BUF+33, &H93
+8126 RETURN
+
 '-------------------------------------------
 ' GENERAL SUPPORT ROUTINES
 '-------------------------------------------
@@ -367,7 +391,7 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 9006 RETURN
 
 ' Wait for player hit a button
-9010 GOSUB 9000                                         ' get player input
+9010 GOSUB 9000                                          ' get player input
 9011 IF K=0 THEN 9010
 9012 RETURN
 
