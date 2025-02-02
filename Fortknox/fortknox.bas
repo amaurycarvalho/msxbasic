@@ -26,7 +26,9 @@ FILE "music/effects.akx"                                ' 1 - sound effects expo
 FILE "levels/SFBANK00.VRM"                              ' 2 - scenes from stage type 1
 FILE "levels/SFBANK01.VRM"                              ' 3 - scenes from stage type 2
 FILE "img/INTRO.SC1"                                    ' 4 - tile bank (edited via nMSXTiles)
-FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plain text, edited via Tiny Sprite)
+FILE "img/fortknox1.spr"                                ' 5 - sprites bank - player handsfree (plain text, edited via Tiny Sprite)
+FILE "img/fortknox2.spr"                                ' 6 - sprites bank - player holding the bag (plain text, edited via Tiny Sprite)
+FILE "img/fortknox3.spr"                                ' 7 - sprites bank - player pushing the car (plain text, edited via Tiny Sprite)
 
 ' Initialization
 1 DEFINT A-Z
@@ -91,7 +93,7 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 103 LOCATE 13,10 : PRINT "STAGE";ST
 104 LOCATE 14,12 : PRINT "READY"
 105 I = 4 : GOSUB 9020                                   ' wait 4 seconds
-106 BF = 0                                               ' player bag flag (0=handsfree, 1=carrying bag)
+106 BF = 0 : GOSUB 8200                                  ' player bag flag (0=handsfree, 1=carrying bag)
 107 BC = 65                                              ' bags count
 108 GOSUB 8100                                           ' load stage scenes bank
 
@@ -235,7 +237,7 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 803     GOSUB 8015                                       ' clear bag tile 
 804     GOSUB 8110                                       ' register getting the bag on the scene buffer
 805     CMD PLYSOUND 4                                   ' play getting an item sound effect
-806     BF = 1                                           ' player carryng the bag flag
+806     BF = 1 : GOSUB 8200                              ' player carryng the bag flag
 807     GOTO 8050                                        ' show player sprite
 
 ' Carrying bag logic
@@ -243,12 +245,12 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 811 IF TPS <> 32 AND TPS <> 0 THEN RETURN                ' if not an empty space, return
 812   N = &H90 : GOSUB 8090                              ' release the bag on the floor
 813   GOSUB 8120                                         ' register releasing the bag on the scene buffer
-814   BF = 0                                             ' player handsfree flag
+814   BF = 0 : GOSUB 8200                                ' player handsfree flag
 815   CMD PLYSOUND 4                                     ' play release the bag sound effect
 816   GOTO 8050                                          ' show player sprite
 
 ' Release the bag in the car logic
-820 BF = 0                                               ' player handsfree flag
+820 BF = 0 : GOSUB 8200                                  ' player handsfree flag
 821 GOSUB 8050                                           ' show player sprite
 822 CMD PLYSOUND 4                                       ' play release the bag sound effect      
 
@@ -316,18 +318,18 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 8042 RETURN
 
 ' Show player sprite
-8050 SS = (PS * 3) + (BF * 24) + 9
+8050 SS = (PS * 3) + 9
 8051 PUT SPRITE 0,(PX,PY),11,SS
 8052 PUT SPRITE 1,(PX,PY),8,SS+1
 8053 PUT SPRITE 2,(PX,PY),15,SS+2
 8054 RETURN
  
 ' Show condor sprite
-8060 SS = CS*4
-8061 PUT SPRITE 3,(CX,CY),15,SS+1
-8062 PUT SPRITE 4,(CX+16,CY),15,SS+2
-8063 PUT SPRITE 5,(CX,CY),8,SS+3
-8064 PUT SPRITE 6,(CX+16,CY),8,SS+4
+8060 SS = CS*4 + 1
+8061 PUT SPRITE 3,(CX,CY),15,SS
+8062 PUT SPRITE 4,(CX+16,CY),15,SS+1
+8063 PUT SPRITE 5,(CX,CY),8,SS+2
+8064 PUT SPRITE 6,(CX+16,CY),8,SS+3
 8065 RETURN
 
 ' Show egg sprite
@@ -377,6 +379,10 @@ FILE "img/fortknox.spr"                                 ' 5 - sprites bank (plai
 8124 POKE BUF+32, &H92
 8125 POKE BUF+33, &H93
 8126 RETURN
+
+' Load sprite bank (player handsfree, holding the bag, pushing the car)
+8200 SPRITE LOAD 5 + BF
+8201 RETURN 
 
 '-------------------------------------------
 ' GENERAL SUPPORT ROUTINES
