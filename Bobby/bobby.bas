@@ -40,7 +40,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 2 DIM SB$(2,2)                                          ' scenes tiles data buffer
 3 CMD PLYLOAD 0, 1                                      ' load music and effects from resources 0/1
 4 SCREEN 2,2,0 : COLOR 15,0,0 
-5 SET TILE ON                                           ' set tile mode on (locate and print works in text mode)
+5 SET TILE ON                                           ' set tile mode on (locate and print stmts works like it is in text mode)
 6 IF NTSC() THEN TS = 60 : TD = 6 ELSE TS = 50 : TD = 5
 
 ' Splash screen 
