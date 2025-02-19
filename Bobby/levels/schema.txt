@@ -1,17 +1,17 @@
 BOBBY IS STILL GOING HOME LEVELS CSV SCHEMA
 
-    stageNumber: game stage number
-    screenResource: screen resource number
-    songNumber: level song number
-    floorObstacleTile1: floor obstacle tile 1 number
-    floorObstacleTile2: floor obstacle tile 2 number
-    floorObstacleX: floor obstacle X position
-    horizonSprite: horizon sprite number
-    cloudSprite: cloud sprite number    
-    bridgeFlag: 0=no bridge, 1=bridge
-    batSprite: 0=no bat, other=sprite number
-    batSpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
-    chickenTile: 0=no chicken, other=tile number
-    chickenSpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
-    chickenQty: chicken quantity
+    0 - stageNumber: game stage number
+    1 - screenResource: screen resource number
+    2 - songNumber: level song number
+    3 - horizonSprite: horizon sprite number
+    4 - skySprite: sky sprite number    
+    5 - bridgeFlag: 0=no bridge, 1=bridge
+    6 - stationaryEnemyTile1: stationary obstacle tile 1 number
+    7 - stationaryEnemyTile2: stationary obstacle tile 2 number
+    8 - stationaryEnemyX: stationary obstacle X position
+    9 - flyingEnemySprite: 0=no flying enemy, other=sprite number
+   10 - flyingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
+   11 - rollingEnemyTile: 0=no rolling enemy, other=tile number
+   12 - rollingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
+   13 - rollingEnemyQty: rolling enemy quantity on screen
 

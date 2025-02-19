@@ -37,11 +37,12 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Initialization
 1 DEFINT A-Z
-2 DIM SB$(2,2)                                          ' scenes tiles data buffer
-3 CMD PLYLOAD 0, 1                                      ' load music and effects from resources 0/1
-4 SCREEN 2,2,0 : COLOR 15,0,0 
-5 SET TILE ON                                           ' set tile mode on (locate and print stmts works like it is in text mode)
-6 IF NTSC() THEN TS = 60 : TD = 6 ELSE TS = 50 : TD = 5
+2 DIM LVA(13)                                           ' level data array 
+3 DIM SB$(2,2)                                          ' scenes tiles data buffer
+4 CMD PLYLOAD 0, 1                                      ' load music and effects from resources 0/1
+5 SCREEN 2,2,0 : COLOR 15,0,0 
+6 SET TILE ON                                           ' set tile mode on (locate and print stmts works like it is in text mode)
+7 IF NTSC() THEN TS = 60 : TD = 6 ELSE TS = 50 : TD = 5
 
 ' Splash screen 
 10 SCR = 3 : SPR = 12 : GOSUB 9050                      ' load splash screen and sprites
@@ -56,191 +57,173 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Level initialization
 100 GOSUB 8100                                          ' load level data from resource
-101 PX = 0 : PY = 100 : PS = 1                          ' player x, y and sprite
-102 PT = TIME                                           ' timer for player
-103 CT = TIME                                           ' timer for cloud/horizon/score
+101 IF STN = 0 THEN LR = LR - 7 : GOTO 100              ' if end of level data, repeat last stage
+102 PX = 0 : PY = 111 : PS = 0                          ' player x, y and sprite
+103 PJ = 0                                              ' player jumping flag
+104 PT = TIME                                           ' timer for player
+105 OT = TIME                                           ' timer for remaining objects
+106 SF = 0                                              ' sprite flag
 
 110 SCR = SCN + 4 : SPR = 12 : GOSUB 9050               ' load level screen and sprites
 111 GOSUB 9030                                          ' play level song
-112 GOSUB 8020                                          ' draw score on screen
-113 GOSUB 8030                                          ' draw stage number on screen
-114 GOSUB 8040                                          ' draw floor obstacle 
-115 GOSUB 8050                                          ' show player sprite
-116 GOSUB 8080                                          ' show player remaining lives
+112 GOSUB 8030                                          ' draw stage number on screen
+113 GOSUB 8050                                          ' show player sprite
+114 GOSUB 8080                                          ' show player remaining lives
+115 GOSUB 320                                           ' show remaining objects on screen
 
 ' Gameplay loop
 120 GOSUB 200                                           ' player logic 
-121 GOSUB 300                                           ' cloud/horizon/score logic
-'122 GOSUB 500                                            ' egg logic
-'123 IF BC = 0 THEN 900                                   ' if no more bags: stage clear 
-124 IF SC = 0 THEN 950                                   ' if nothing left: game over
-125 GOTO 120
+121 GOSUB 300                                           ' remaining objects logic
+122 IF PX >= 240 THEN 900                               ' if player reached end of stage: next stage 
+123 IF SC = 0 THEN 950                                  ' if nothing left: game over
+124 GOTO 120
 
 ' Player movement logic
 200 IF TIME < PT THEN PT = TIME                          
 201 DI = TIME - PT
-202 IF DI < (TD*2) THEN RETURN                           ' time step = 5x per second
+202 IF DI < TD THEN RETURN                              ' time step = 10x per second
 203   PT = TIME
 
-210 GOSUB 9000                                           ' get player input
-211 IF K <> 0 GOSUB 800                                  ' player press the button?
-212 ON J GOTO 220, 213, 230, 213, 240, 213, 250, 213     ' player press the stick? 
-213   RETURN
+210 GOSUB 9000                                          ' get player input
+211 IF K  <> 0 GOSUB 800                                ' player press the button?
+212 IF PJ <> 0 GOSUB 810                                ' is player jumping?
+213 ON J GOTO 220, 214, 230, 214, 240, 214, 250, 214    ' player press the stick? 
+214   RETURN
 
-220 IF PS = 2 THEN PS = 6 ELSE PS = 2                    ' --> player moves UP 
-221 IF PY <= 15 THEN RETURN
-222   GOSUB 270                                          ' get up/down tiles
-223   IF TU1 <> &H88 OR BF = 2 THEN RETURN               ' if not a ladder (or pushing the car), return
-224     PY = PY - 8
-225     GOTO 8050                                        ' show player sprite
+' --> player moves UP
+220 RETURN
 
-230 IF PS = 0 THEN PS = 1 ELSE PS = 0                    ' --> player moves RIGHT
-231 IF PX < 240 THEN 236                                 ' if hit right border: next scene
-232   IF SCN >= 8 THEN RETURN
-233     SCN = SCN + 1 
-234     PX = 0 : IF PS = 0 THEN PS = 1 ELSE PS = 0       ' player x, y and sprite
-235     RETURN 111                                       ' next scene
-236 GOSUB 260                                            ' get left/right tiles
-237 IF TR1 = &H80 OR TR2 = &H80 THEN RETURN              ' if a wall, return
-238   PX = PX + 8
-239   GOTO 8050                                          ' show player sprite
+' --> player moves RIGHT
+230 IF PX >= 240 THEN RETURN                            ' if hit right border: return
+231 GOSUB 260                                           ' get left/right tiles
+232 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit a obstacle, return
+233   PX = PX + 4                                       ' moves right
+234   IF PJ <> 0 THEN PS = 4 ELSE PS = (PS + 1) MOD 4   ' change player sprite                                  
+235   GOTO 8050                                         ' show player sprite
 
-240 IF PS = 2 THEN PS = 6 ELSE PS = 2                    ' --> player moves DOWN 
-241 IF PY >= 170 THEN RETURN
-242   GOSUB 270                                          ' get up/down tiles
-243   IF TD1 <> &H88 OR BF = 2 THEN RETURN               ' if not a ladder (or pushing the car), return
-244     PY = PY + 8
-245     GOTO 8050                                        ' show player sprite
+' --> player moves DOWN 
+240 RETURN
 
-250 IF PS = 4 THEN PS = 5 ELSE PS = 4                    ' --> player moves LEFT
-251 IF PX > 7 THEN 256                                   ' if hit left border: previous scene
-252   IF SCN <= 1 THEN RETURN
-253     SCN = SCN - 1 
-254     PX = 240 : IF PS = 4 THEN PS = 5 ELSE PS = 4     ' player x, y and sprite 
-255     RETURN 111                                       ' previous scene
-256 GOSUB 260                                            ' get left/right tiles
-257 IF TL1 = &H80 OR TL2 = &H80 THEN RETURN              ' if a wall, return
-258   PX = PX - 8
-259   GOTO 8050                                          ' show player sprite
+' --> player moves LEFT
+250 IF PX <= 0 THEN RETURN                              ' if hit right border: return
+251 GOSUB 260                                           ' get left/right tiles
+252 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit a obstacle, return
+253   PX = PX - 4                                       ' moves right
+254   IF PJ <> 0 THEN PS=10 ELSE PS=(PS + 1) MOD 4 + 6  ' change player sprite                                  
+255   GOTO 8050                                         ' show player sprite
 
-260 X=PX/8 : Y=PY/8                                      ' get LEFT/RIGHT tiles from player position
-261 TL1=TILE(X-1,Y+1)                                    ' tile position in text mode coords
+260 X=PX/8 : Y=PY/8                                     ' get LEFT/RIGHT tiles from player position
+261 TL1=TILE(X-1,Y+1)                                   ' tile position in text mode coords
 262 TL2=TILE(X-1,Y+2)
 263 TR1=TILE(X+2,Y+1)
 264 TR2=TILE(X+2,Y+2)
 265 RETURN
 
-270 X=PX/8 : Y=PY/8                                      ' get UP/DOWN tiles from player position
-271 TU1=TILE(X,Y+1)                                      ' tile position in text mode coords
+270 X=PX/8 : Y=PY/8                                     ' get UP/DOWN tiles from player position
+271 TU1=TILE(X,Y+1)                                     ' tile position in text mode coords
 272 TD1=TILE(X,Y+3)
 273 RETURN
 
-280 X=PX/8 : Y=PY/8+1                                    ' get inner tiles from player position
-281 TP1=TILE(X,Y)                                        ' tile position in text mode coords
+280 X=PX/8 : Y=PY/8+1                                   ' get inner tiles from player position
+281 TP1=TILE(X,Y)                                       ' tile position in text mode coords
 282 TP2=TILE(X,Y+1)                                      
 283 TP3=TILE(X+1,Y)                                      
 284 TP4=TILE(X+1,Y+1)          
 285 TPS=TP1 OR TP2 OR TP3 OR TP4                     
 286 RETURN
 
-' Cloud/horizon/score logic
-300 IF TIME < CT THEN CT = TIME                          
-301 DI = TIME - CT
-302 IF DI < (TD*5) THEN RETURN                           ' time step = 2x per second
-303   CT = TIME
+' Remaining objects logic
+300 IF TIME < OT THEN OT = TIME                          
+301 DI = TIME - OT
+302 IF DI < (TD*5) THEN RETURN                          ' time step = 2x per second
+303   OT = TIME
 
-310 IF SC > 0 THEN SC = SC - 1
-311 GOTO 8020                                           ' show score
+310 IF SC > 0 THEN SC = SC - 1                          ' decrease score
+311 SF = (SF + 1) MOD 2                                 ' change sprite flag
+
+320 GOSUB 8040                                          ' draw score on screen
+321 GOSUB 8200                                          ' draw horizon sprite 
+322 GOSUB 8300                                          ' draw sky sprite
+323 GOSUB 8400                                          ' draw bridge
+324 GOSUB 8500                                          ' draw stationary obstacle 
+325 GOSUB 8600                                          ' draw flying enemy
+326 GOTO  8700                                          ' draw rolling enemy
 
 ' Condor movement logic
-400 CS = (CS + 1) MOD 2
-401 CX = CX + 8
-402 IF CX > 220 THEN CY = 212                            ' if right border: hide condor
-403 GOSUB 8060                                           ' show condor sprite
+'400 CS = (CS + 1) MOD 2
+'401 CX = CX + 8
+'402 IF CX > 220 THEN CY = 212                            ' if right border: hide condor
+'403 GOSUB 8200                                           ' show condor sprite
 
 ' Egg appearence logic
-500 IF TIME < ET THEN ET = TIME                          
-501 DI = TIME - ET
-502 IF DI < TD THEN RETURN                               ' time step = 10x per second
-503   ET = TIME
+'500 IF TIME < ET THEN ET = TIME                          
+'501 DI = TIME - ET
+'502 IF DI < TD THEN RETURN                               ' time step = 10x per second
+'503   ET = TIME
 
-510 IF EY < 212 THEN 600                                 ' if egg already in action: movement logic
-511   IF CY >= 212 THEN RETURN                           ' if condor not in action: return
-512     GOSUB 9005                                       ' next random number
-513     IF (R MOD 40) > ST THEN RETURN                   ' random egg appearence: higher stages = more appearences
-514       EY = CY : EX = CX + 8 
-515       GOTO 8070                                      ' show egg sprite
+'510 IF EY < 212 THEN 600                                 ' if egg already in action: movement logic
+'511   IF CY >= 212 THEN RETURN                           ' if condor not in action: return
+'512     GOSUB 9005                                       ' next random number
+'513     IF (R MOD 40) > ST THEN RETURN                   ' random egg appearence: higher stages = more appearences
+'514       EY = CY : EX = CX + 8 
+'515       GOTO 8070                                      ' show egg sprite
 
 ' Egg movement logic
-600 IF EY >= 212 THEN RETURN
-601   EY = EY + 6 
-602   GOSUB 8070                                         ' show egg sprite
+'600 IF EY >= 212 THEN RETURN
+'601   EY = EY + 6 
+'602   GOSUB 8070                                         ' show egg sprite
 
 ' Egg vs player collision logic
-700 IF COLLISION(7,0) < 0 THEN RETURN                    ' if egg sprite collided with player sprite
-701   IF PS < 4 THEN PS = 3 ELSE PS = 7                  ' player is dead
-702     GOSUB 8050                                       ' show player sprite
-703     CMD PLYSOUND 1                                   ' play egg collision sound effect
-704     IF LV > 0 THEN LV = LV - 1 : GOSUB 8080          ' show lives
-705     EY = 212 
-706     GOTO 8070                                        ' hide egg
+'700 IF COLLISION(7,0) < 0 THEN RETURN                    ' if egg sprite collided with player sprite
+'701   IF PS < 4 THEN PS = 3 ELSE PS = 7                  ' player is dead
+'702     GOSUB 8050                                       ' show player sprite
+'703     CMD PLYSOUND 1                                   ' play egg collision sound effect
+'704     IF LV > 0 THEN LV = LV - 1 : GOSUB 8080          ' show lives
+'705     EY = 212 
+'706     GOTO 8070                                        ' hide egg
 
-' Player trying to get an item 
-800 GOSUB 280                                            ' get inner tiles from player position
-801 ON BF GOTO 820, 860                                  ' player action status (0=handsfree, 1=holding the bag, 2=pushing the car)
-802   IF TP2 = &HA2 THEN 850                             ' is it the car?
-803     IF TP1 <> &H90 THEN RETURN                       ' if not a bag, return
+' Player jumping button
+800 IF PJ <> 0 THEN RETURN                              ' ignore if player is already jumping
+801   CMD PLYSOUND 7,2                                  ' player jumping sound effect 7 on channel 2 
+802   PJ = -4                                           ' player jumping step
+803   IF PS > 5 THEN PS = 10 ELSE PS = 4                ' player is jumping sprite
+804   GOTO 8050                                         ' show player sprite
+ 
+' Player jumping logic
+810 PY = PY + PJ
+811 IF PY <= 80 THEN PJ = 4                             ' if roof, reverse jumping
+812 IF PY >= 111 THEN 820                               ' if floor, end jumping
+813 GOTO 8050                                           ' show player sprite 
 
-' Getting the bag logic
-810       GOSUB 8015                                     ' clear bag tile 
-811       GOSUB 8110                                     ' register getting the bag on the scene buffer
-812       CMD PLYSOUND 4                                 ' play getting an item sound effect
-813       BF = 1 : GOSUB 8200                            ' player holding the bag
-814       GOTO 8050                                      ' show player sprite
+820 IF PS > 5 THEN PS = 6 ELSE PS = 0
+821 PJ = 0
+822 GOTO 8050
 
-' Releasing the bag logic
-820 IF TP2 = &HA2 OR TP2 = &HA3 THEN 830                 ' if car tile, release the bag
-821   IF TPS <> 32 AND TPS <> 0 THEN RETURN              ' if not an empty space, return
-822     N = &H90 : GOSUB 8090                            ' release the bag on the floor
-823     GOSUB 8120                                       ' register releasing the bag on the scene buffer
-824     BF = 0 : GOSUB 8200                              ' player handsfree flag
-825     CMD PLYSOUND 4                                   ' play release an item sound effect
-826     GOTO 8050                                        ' show player sprite
-
-' Release the bag in the car logic
-830 BF = 0 : GOSUB 8200                                  ' player handsfree flag
-831 GOSUB 8050                                           ' show player sprite
-832 CMD PLYSOUND 4                                       ' play release an item sound effect      
 
 ' Add score and reduce bags count
-840 SC = SC + 1                                          ' add to score points
-841 IF BC > 0 THEN BC = BC - 1                           ' reduce bags count
-842 GOTO 8020                                            ' print score
+'840 SC = SC + 1                                          ' add to score points
+'841 IF BC > 0 THEN BC = BC - 1                           ' reduce bags count
+'842 GOTO 8040                                            ' print score
 
 ' Getting the car logic
-850 GOSUB 8015                                           ' clear car tile 
-851 GOSUB 8110                                           ' register getting the car on the scene buffer
-852 CMD PLYSOUND 4                                       ' play getting an item sound effect
-853 BF = 2 : GOSUB 8200                                  ' player holding the bag
-854 GOTO 8050                                            ' show player sprite
+'850 GOSUB 8015                                           ' clear car tile 
+'851 GOSUB 8110                                           ' register getting the car on the scene buffer
+'852 CMD PLYSOUND 4                                       ' play getting an item sound effect
+'853 BF = 2 : GOSUB 8200                                  ' player holding the bag
+'854 GOTO 8050                                            ' show player sprite
  
 ' Releasing the car logic
-860 IF TPS <> 32 AND TPS <> 0 THEN RETURN                ' if not an empty space, return
-861   N = &HA2 : Y = Y + 1 : GOSUB 8010                  ' release the car on the floor
-862   GOSUB 8130                                         ' register releasing the car on the scene buffer
-863   BF = 0 : GOSUB 8200                                ' player handsfree flag
-864   CMD PLYSOUND 4                                     ' play release an item sound effect
-865   GOTO 8050                                          ' show player sprite
+'860 IF TPS <> 32 AND TPS <> 0 THEN RETURN                ' if not an empty space, return
+'861   N = &HA2 : Y = Y + 1 : GOSUB 8010                  ' release the car on the floor
+'862   GOSUB 8130                                         ' register releasing the car on the scene buffer
+'863   BF = 0 : GOSUB 8200                                ' player handsfree flag
+'864   CMD PLYSOUND 4                                     ' play release an item sound effect
+'865   GOTO 8050                                          ' show player sprite
 
-' Stage clear
-900 ST = ST + 1 : SCN = 1
-901 IF LV < 5 THEN LV = LV + 1 : GOSUB 8080              ' show lives
-902 LOCATE 3,10 : PRINT "+----------------------+"
-903 LOCATE 3,11 : PRINT "+ S T A G E  C L E A R +"
-904 LOCATE 3,12 : PRINT "+----------------------+"
-905 MUS = 3 : GOSUB 9030                                 ' stage clear song
-906 I = 3 : GOSUB 9020                                   ' wait 3 seconds
-907 GOTO 100                                             ' go to next stage
+' Next stage
+900 LR = LR + 1 
+901 SC = SC + 100
+902 GOTO 100                                            ' go to next stage
 
 ' Game over
 950 MUS = 5 : GOSUB 9030                                ' game over song
@@ -249,8 +232,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 953 GOTO 20                                             ' restart the game
 
 ' Player is dead logic
-960 PS = 0                                              ' player is dead sprite
-961 CMD PLYSOUND 5                                      ' player is dead sound effect
+960 IF PS > 5 THEN PS = 11 ELSE PS = 5                  ' player is dead sprite
+961 CMD PLYSOUND 5, 2                                   ' player is dead sound effect on channel 2
 962 GOTO 8050                                           ' show player sprite 
 
 '-------------------------------------------
@@ -276,39 +259,21 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8018 PUT TILE 32,(X+1,Y+1)
 8019 RETURN
 
-' Print score 
-8020 LOCATE 12, 0 
-8021 PRINT USING$("######", SC*10.0);
-8022 RETURN
-
 ' Show stage STN 
 8030 LOCATE 14,22 : PRINT USING$("###", STN);
 8031 RETURN
 
-' Show floor obstacle
-8040 X = FOX : Y = 14
-8041 N = FO1 
-8042 GOTO 8090                                          ' print 2x2 block (horizontal way)
+' Print score 
+8040 LOCATE 12, 0 
+8041 PRINT USING$("######", SC*10.0);
+8042 RETURN
 
 ' Show player sprite
-8050 SS = (PS * 3) + 9
-8051 PUT SPRITE 0,(PX,PY),11,SS
-8052 PUT SPRITE 1,(PX,PY),8,SS+1
-8053 PUT SPRITE 2,(PX,PY),15,SS+2
-8054 RETURN
+8050 SS = (PS * 2)
+8051 PUT SPRITE 0,(PX,PY),1,SS
+8052 PUT SPRITE 1,(PX,PY),11,SS+1
+8053 RETURN
  
-' Show condor sprite
-8060 SS = CS*4 + 1
-8061 PUT SPRITE 3,(CX,CY),15,SS
-8062 PUT SPRITE 4,(CX+16,CY),15,SS+1
-8063 PUT SPRITE 5,(CX,CY),8,SS+2
-8064 PUT SPRITE 6,(CX+16,CY),8,SS+3
-8065 RETURN
-
-' Show egg sprite
-8070 PUT SPRITE 7,(EX,EY),15,0
-8071 RETURN
-
 ' Show lives
 8080 X = 1 : Y = 22
 8081 FOR I = 1 TO 5
@@ -328,26 +293,53 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Load stage setup from levels data resource 
 8100 CMD RESTORE 2                                      ' levels data on resource number 2
 8101 RESTORE LR                                         ' go to row number LR in levels data resource CSV
-8102 READ STN                                           ' stage number
-8103 READ SCN                                           ' scene number
-8104 READ MUS                                           ' song number
-8105 READ FO1                                           ' floor obstacle tile 1 number
-8106 READ FO2                                           ' floor obstacle tile 2 number
-8107 READ FOX                                           ' floor obstacle X position
-8108 READ HSN                                           ' horizon sprite number
-8109 READ CSN                                           ' cloud sprite number    
-8110 READ BRF                                           ' bridge flag (0=no bridge, 1=bridge)
-8111 READ BSN                                           ' bat sprite number (0=no bat, other=sprite number)
-8112 READ BSP                                           ' bat speed (0=fastest, 1=fast, 2=slow, 3=slowest)
-8113 READ CTN                                           ' chicken tile number (0=no chicken, other=tile number)
-8114 READ CSP                                           ' chicken speed (0=fastest, 1=fast, 2=slow, 3=slowest)
-8115 READ CQT                                           ' chicken quantity
-8116 RETURN
+8102 FOR I = 0 TO 13
+8103   READ LVA(I)
+8104 NEXT
+8105 STN = LVA(0)                                       ' stage number
+8106 SCN = LVA(1)                                       ' scene number
+8107 MUS = LVA(2)                                       ' song number
+8108 RETURN
 
 ' dummy code
 8120 RETURN
 8130 RETURN
-8200 RETURN
+
+' Show horizon sprite
+8200 IF LVA(3) = 0 THEN RETURN                          ' if no horizon sprite, return
+8201   SS = LVA(3) + SF*2
+8202   PUT SPRITE 3,(HX,HY),15,SS
+8203   PUT SPRITE 4,(HX+16,HY),15,SS+1
+8204   PUT SPRITE 5,(HX,HY),8,SS+2
+8205   PUT SPRITE 6,(HX+16,HY),8,SS+3
+8206   RETURN
+
+' Show sky sprite
+8300 IF LVA(4) = 0 THEN RETURN                          ' if no sky sprite, return
+8301   SS = LVA(4) + SF*2
+8302   PUT SPRITE 3,(SX,SY),15,SS
+8303   PUT SPRITE 4,(SX+16,SY),15,SS+1
+8304   PUT SPRITE 5,(SX,SY),8,SS+2
+8305   PUT SPRITE 6,(SX+16,SY),8,SS+3
+8306   RETURN
+
+' Show bridge
+8400 IF LVA(5) = 0 THEN RETURN                          ' if no bridge, return
+8401   RETURN
+
+' Show stationary obstacle
+8500 IF LVA(5) = 1 THEN RETURN                          ' if bridge, return
+8501   X = LVA(8) : Y = 14                              ' stationary obstacle X position
+8502   N = LVA(6+SF)                                    ' stationary obstacle tile number 
+8503   GOTO 8090                                        ' print 2x2 block (horizontal way)
+
+' Show flying enemy
+8600 IF LVA(9) = 0 THEN RETURN                          ' if no flying enemy, return
+8601   RETURN
+
+' Show rolling enemy
+8700 IF LVA(11) = 0 THEN RETURN                         ' if no rolling enemy, return
+8701   RETURN
 
 '-------------------------------------------
 ' GENERAL SUPPORT ROUTINES
@@ -362,7 +354,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 9006 RETURN
 
 ' Wait for player hit a button
-9010 GOSUB 9000                                          ' get player input
+9010 GOSUB 9000                                         ' get player input
 9011 IF K=0 THEN 9010
 9012 RETURN
 
@@ -374,9 +366,11 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 9024 RETURN
 
 ' Play song MUS
-9030 CMD PLYSONG MUS 
-9031 CMD PLYPLAY
-9032 RETURN
+9030 IF MUS = OLDMUS THEN RETURN                        ' ignore if same song
+9031   OLDMUS = MUS
+9032   CMD PLYSONG MUS 
+9033   CMD PLYPLAY
+9034   RETURN
 
 ' Clear sprites
 9040 FOR A=0 TO 31
