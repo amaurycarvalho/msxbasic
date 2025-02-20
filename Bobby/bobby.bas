@@ -37,7 +37,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Initialization
 1 DEFINT A-Z
-2 DIM LVA(13)                                           ' level data array 
+2 DIM LVA(16)                                           ' level data array 
 3 DIM SB$(2,2)                                          ' scenes tiles data buffer
 4 CMD PLYLOAD 0, 1                                      ' load music and effects from resources 0/1
 5 SCREEN 2,2,0 : COLOR 15,0,0 
@@ -138,7 +138,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 302 IF DI < (TD*2) THEN RETURN                          ' time step = 5x per second
 303   OT = TIME
 
-310 IF OSF=0 OR OSF=3 THEN IF SC > 0 THEN SC = SC - 1   ' decrease score 2x per second
+310 SC = SC - (OSF AND 1)                               ' decrease score 2x per second
 311 OSF = (OSF + 1) MOD 5                               ' change object step flag
 
 320 GOSUB 8040                                          ' draw score on screen
@@ -293,7 +293,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Load stage setup from levels data resource 
 8100 CMD RESTORE 2                                      ' levels data on resource number 2
 8101 RESTORE LR                                         ' go to row number LR in levels data resource CSV
-8102 FOR I = 0 TO 13
+8102 FOR I = 0 TO 16
 8103   READ LVA(I)
 8104 NEXT
 8105 STN = LVA(0)                                       ' stage number
@@ -307,18 +307,18 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Show horizon sprite
 8200 IF LVA(3) = 0 THEN RETURN                          ' if no horizon sprite, return
-8201   SS = LVA(3) + (OSF MOD 2)*2
-8202   PUT SPRITE 2,(HX,HY),15,SS
-8203   PUT SPRITE 3,(HX+16,HY),15,SS+1
+8201   SS = LVA(3) + (OSF AND 1)*2
+8202   PUT SPRITE 2,(HX,HY),LVA(4),SS
+8203   PUT SPRITE 3,(HX+16,HY),LVA(4),SS+1
 8204   HX = HX + 4 : IF HX < 228 THEN RETURN
 8205   IF HY = 193 THEN HY = 58 : HX = 0 ELSE HY = 193 : HX = 100 + (R MOD 100) 
 8206   RETURN
 
 ' Show sky sprite
-8300 IF LVA(4) = 0 THEN RETURN                          ' if no sky sprite, return
-8301   SS = LVA(4) + (OSF MOD 2)*2
-8302   PUT SPRITE 4,(SX,SY),1,SS
-8303   PUT SPRITE 5,(SX+16,SY),1,SS+1
+8300 IF LVA(5) = 0 THEN RETURN                          ' if no sky sprite, return
+8301   SS = LVA(5) + (OSF AND 1)*2
+8302   PUT SPRITE 4,(SX,SY),LVA(6),SS
+8303   PUT SPRITE 5,(SX+16,SY),LVA(6),SS+1
 8304   SX = SX + SXI
 8305   SY = SY + SYI
 8306   IF SX < 0 THEN SX = 0 : SXI = -SXI ELSE IF SX > 228 THEN SX = 228 : SXI = -SXI
@@ -326,21 +326,21 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8308   RETURN
 
 ' Show bridge
-8400 IF LVA(5) = 0 THEN RETURN                          ' if no bridge, return
+8400 IF LVA(7) = 0 THEN RETURN                          ' if no bridge, return
 8401   RETURN
 
 ' Show stationary obstacle
-8500 IF LVA(5) = 1 THEN RETURN                          ' if bridge, return
-8501   X = LVA(8) : Y = 14                              ' stationary obstacle X position
-8502   N = LVA(6+SF)                                    ' stationary obstacle tile number 
+8500 IF LVA(7) = 1 THEN RETURN                          ' if bridge, return
+8501   X = LVA(10) : Y = 14                             ' stationary obstacle X position
+8502   N = LVA(8+(OSF AND 1))                           ' stationary obstacle tile number 
 8503   GOTO 8090                                        ' print 2x2 block (horizontal way)
 
 ' Show flying enemy
-8600 IF LVA(9) = 0 THEN RETURN                          ' if no flying enemy, return
+8600 IF LVA(11) = 0 THEN RETURN                         ' if no flying enemy, return
 8601   RETURN
 
 ' Show rolling enemy
-8700 IF LVA(11) = 0 THEN RETURN                         ' if no rolling enemy, return
+8700 IF LVA(14) = 0 THEN RETURN                         ' if no rolling enemy, return
 8701   RETURN
 
 '-------------------------------------------

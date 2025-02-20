@@ -3,15 +3,18 @@ BOBBY IS STILL GOING HOME LEVELS CSV SCHEMA
     0 - stageNumber: game stage number
     1 - screenResource: screen resource number
     2 - songNumber: level song number
-    3 - horizonSprite: horizon sprite number
-    4 - skySprite: sky sprite number    
-    5 - bridgeFlag: 0=no bridge, 1=bridge
-    6 - stationaryEnemyTile1: stationary obstacle tile 1 number
-    7 - stationaryEnemyTile2: stationary obstacle tile 2 number
-    8 - stationaryEnemyX: stationary obstacle X position
-    9 - flyingEnemySprite: 0=no flying enemy, other=sprite number
-   10 - flyingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
-   11 - rollingEnemyTile: 0=no rolling enemy, other=tile number
-   12 - rollingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
-   13 - rollingEnemyQty: rolling enemy quantity on screen
+    3 - horizonSpriteNumber: horizon sprite number
+    4 - horizonSpriteColor: horizon sprite color
+    5 - skySpriteNumber: sky sprite number    
+    6 - skySpriteColor: sky sprite color
+    7 - bridgeFlag: 0=no bridge, 1=bridge
+    8 - stationaryEnemyTile1: stationary obstacle tile 1 number
+    9 - stationaryEnemyTile2: stationary obstacle tile 2 number
+   10 - stationaryEnemyX: stationary obstacle X position
+   11 - flyingEnemySpriteNumber: 0=no flying enemy, other=sprite number
+   12 - flyingEnemySpriteColor: flying enemy sprite color
+   13 - flyingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
+   14 - rollingEnemyTile: 0=no rolling enemy, other=tile number
+   15 - rollingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
+   16 - rollingEnemyQty: rolling enemy quantity on screen
 
