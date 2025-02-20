@@ -135,11 +135,11 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Remaining objects logic
 300 IF TIME < OT THEN OT = TIME                          
 301 DI = TIME - OT
-302 IF DI < (TD*5) THEN RETURN                          ' time step = 2x per second
+302 IF DI < (TD*2) THEN RETURN                          ' time step = 5x per second
 303   OT = TIME
 
-310 IF SC > 0 THEN SC = SC - 1                          ' decrease score
-311 OSF = (OSF + 1) MOD 2                               ' change object step flag
+310 IF OSF=0 OR OSF=3 THEN IF SC > 0 THEN SC = SC - 1   ' decrease score 2x per second
+311 OSF = (OSF + 1) MOD 5                               ' change object step flag
 
 320 GOSUB 8040                                          ' draw score on screen
 321 GOSUB 8200                                          ' draw horizon sprite 
@@ -307,21 +307,21 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Show horizon sprite
 8200 IF LVA(3) = 0 THEN RETURN                          ' if no horizon sprite, return
-8201   SS = LVA(3) + OSF*2
+8201   SS = LVA(3) + (OSF MOD 2)*2
 8202   PUT SPRITE 2,(HX,HY),15,SS
 8203   PUT SPRITE 3,(HX+16,HY),15,SS+1
-8204   HX = HX + 4 : IF HX < 240 THEN RETURN
+8204   HX = HX + 4 : IF HX < 228 THEN RETURN
 8205   IF HY = 193 THEN HY = 58 : HX = 0 ELSE HY = 193 : HX = 100 + (R MOD 100) 
 8206   RETURN
 
 ' Show sky sprite
 8300 IF LVA(4) = 0 THEN RETURN                          ' if no sky sprite, return
-8301   SS = LVA(4) + OSF*2
+8301   SS = LVA(4) + (OSF MOD 2)*2
 8302   PUT SPRITE 4,(SX,SY),1,SS
 8303   PUT SPRITE 5,(SX+16,SY),1,SS+1
 8304   SX = SX + SXI
 8305   SY = SY + SYI
-8306   IF SX < 0 THEN SX = 0 : SXI = -SXI ELSE IF SX > 240 THEN SX = 240 : SXI = -SXI
+8306   IF SX < 0 THEN SX = 0 : SXI = -SXI ELSE IF SX > 228 THEN SX = 228 : SXI = -SXI
 8307   IF SY < 8 THEN SY = 8 : SYI = -SYI ELSE IF SY > 40 THEN SY = 40 : SYI = -SYI
 8308   RETURN
 
