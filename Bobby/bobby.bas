@@ -58,11 +58,11 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Level initialization
 100 GOSUB 8100                                          ' load level data from resource
 101 IF STN = 0 THEN LR = LR - 7 : GOTO 100              ' if end of level data, repeat last stage
-102 PX = 0 : PY = 111 : PS = 0                          ' player x, y and sprite
-103 PJ = 0                                              ' player jumping flag
-104 PT = TIME                                           ' timer for player
-105 OT = TIME                                           ' timer for remaining objects
-106 SF = 0                                              ' sprite flag
+102 PX = 0 : PY = 111 : PS = 0 : PJ = 0                 ' player x, y, sprite and jumping flag
+103 PT = TIME                                           ' timer for player
+104 OT = TIME : OSF = 0                                 ' timer for remaining objects and object step flag
+105 HX = 0 : HY = 58                                    ' horizon object position X and Y
+106 SX = 200 : SY = 20 : SXI = -8 : SYI = 4             ' sky object position X and Y
 
 110 SCR = SCN + 4 : SPR = 12 : GOSUB 9050               ' load level screen and sprites
 111 GOSUB 9030                                          ' play level song
@@ -139,7 +139,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 303   OT = TIME
 
 310 IF SC > 0 THEN SC = SC - 1                          ' decrease score
-311 SF = (SF + 1) MOD 2                                 ' change sprite flag
+311 OSF = (OSF + 1) MOD 2                               ' change object step flag
 
 320 GOSUB 8040                                          ' draw score on screen
 321 GOSUB 8200                                          ' draw horizon sprite 
@@ -307,21 +307,23 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Show horizon sprite
 8200 IF LVA(3) = 0 THEN RETURN                          ' if no horizon sprite, return
-8201   SS = LVA(3) + SF*2
-8202   PUT SPRITE 3,(HX,HY),15,SS
-8203   PUT SPRITE 4,(HX+16,HY),15,SS+1
-8204   PUT SPRITE 5,(HX,HY),8,SS+2
-8205   PUT SPRITE 6,(HX+16,HY),8,SS+3
+8201   SS = LVA(3) + OSF*2
+8202   PUT SPRITE 2,(HX,HY),15,SS
+8203   PUT SPRITE 3,(HX+16,HY),15,SS+1
+8204   HX = HX + 4 : IF HX < 240 THEN RETURN
+8205   IF HY = 193 THEN HY = 58 : HX = 0 ELSE HY = 193 : HX = 100 + (R MOD 100) 
 8206   RETURN
 
 ' Show sky sprite
 8300 IF LVA(4) = 0 THEN RETURN                          ' if no sky sprite, return
-8301   SS = LVA(4) + SF*2
-8302   PUT SPRITE 3,(SX,SY),15,SS
-8303   PUT SPRITE 4,(SX+16,SY),15,SS+1
-8304   PUT SPRITE 5,(SX,SY),8,SS+2
-8305   PUT SPRITE 6,(SX+16,SY),8,SS+3
-8306   RETURN
+8301   SS = LVA(4) + OSF*2
+8302   PUT SPRITE 4,(SX,SY),1,SS
+8303   PUT SPRITE 5,(SX+16,SY),1,SS+1
+8304   SX = SX + SXI
+8305   SY = SY + SYI
+8306   IF SX < 0 THEN SX = 0 : SXI = -SXI ELSE IF SX > 240 THEN SX = 240 : SXI = -SXI
+8307   IF SY < 8 THEN SY = 8 : SYI = -SYI ELSE IF SY > 40 THEN SY = 40 : SYI = -SYI
+8308   RETURN
 
 ' Show bridge
 8400 IF LVA(5) = 0 THEN RETURN                          ' if no bridge, return
