@@ -4,6 +4,7 @@
 ' Game Info:
 '   Bobby is Going Home is a platform game released for the Atari 2600 console in 1983.
 '     https://en.wikipedia.org/wiki/Bobby_is_Going_Home
+'     https://www.rfgeneration.com/news/2600/Banana-s-Rotten-Reviews-Bobby-Is-Going-Home-3473.php
 '     https://www.retrogames.cz/play_192-Atari2600.php
 '   Remake by Amaury Carvalho (2025):
 '     https://github.com/amaurycarvalho/msxbasic/Bobby
@@ -87,8 +88,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 210 GOSUB 9000                                          ' get player input
 211 IF K  <> 0 GOSUB 800                                ' player press the button?
 212 IF PJ <> 0 GOSUB 810                                ' is player jumping?
-213 ON J GOTO 220, 214, 230, 214, 240, 214, 250, 214    ' player press the stick? 
-214   RETURN
+213 ON J GOTO 220, 219, 230, 219, 240, 219, 250, 219    ' player press the stick? 
+219   RETURN
 
 ' --> player moves UP
 220 RETURN
@@ -96,10 +97,10 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' --> player moves RIGHT
 230 IF PX >= 240 THEN RETURN                            ' if hit right border: return
 231 GOSUB 260                                           ' get left/right tiles
-232 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit a obstacle, return
+232 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit an obstacle, return
 233   PX = PX + 4                                       ' moves right
 234   IF PJ <> 0 THEN PS = 4 ELSE PS = (PS + 1) MOD 4   ' change player sprite                                  
-235   GOTO 8050                                         ' show player sprite
+235   GOTO 260                                          ' show player and test collision
 
 ' --> player moves DOWN 
 240 RETURN
@@ -107,30 +108,39 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' --> player moves LEFT
 250 IF PX <= 0 THEN RETURN                              ' if hit right border: return
 251 GOSUB 260                                           ' get left/right tiles
-252 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit a obstacle, return
+252 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit an obstacle, return
 253   PX = PX - 4                                       ' moves right
 254   IF PJ <> 0 THEN PS=10 ELSE PS=(PS + 1) MOD 4 + 6  ' change player sprite                                  
-255   GOTO 8050                                         ' show player sprite
+255   GOTO 260                                          ' show player and test collision
 
-260 X=PX/8 : Y=PY/8                                     ' get LEFT/RIGHT tiles from player position
-261 TL1=TILE(X-1,Y+1)                                   ' tile position in text mode coords
-262 TL2=TILE(X-1,Y+2)
-263 TR1=TILE(X+2,Y+1)
-264 TR2=TILE(X+2,Y+2)
-265 RETURN
+' Player tiles collision logic
+260 GOSUB 8050                                          ' show player sprite
+261 GOSUB 8060                                          ' get player tiles
+262 IF PTBL >= 97 OR PTBR >= 97 THEN 290                ' player hit an obstacle or rolling enemy? 
+263 IF PY < 111 THEN 280                                ' is player in the air?
 
-270 X=PX/8 : Y=PY/8                                     ' get UP/DOWN tiles from player position
-271 TU1=TILE(X,Y+1)                                     ' tile position in text mode coords
-272 TD1=TILE(X,Y+3)
-273 RETURN
+270 IF PTBL <> 36 OR PTBR <> 36 THEN 280                ' player not fell on a hole?
+271   MUS = 5 : GOSUB 9030                              ' player is drowning song
+272   FOR SS = 24 TO 32 STEP 3
+273     GOSUB 8070                                      ' player is drowning sprite
+274     CMD PLYSOUND 6, 2                               ' player is drowning sound effect on channel 2
+275     I = 1 : GOSUB 9020                              ' wait 1 second
+276   NEXT
+277   GOTO 291                                          ' player hit something logic
 
-280 X=PX/8 : Y=PY/8+1                                   ' get inner tiles from player position
-281 TP1=TILE(X,Y)                                       ' tile position in text mode coords
-282 TP2=TILE(X,Y+1)                                      
-283 TP3=TILE(X+1,Y)                                      
-284 TP4=TILE(X+1,Y+1)          
-285 TPS=TP1 OR TP2 OR TP3 OR TP4                     
-286 RETURN
+' Player sprite collision logic
+280 OS = COLLISION(0,6)                                 ' check if player sprite collided with a flying enemy sprite
+281 IF OS < 0 THEN RETURN                               ' if nothing collided with player, return
+282   GOTO 290                                          ' player hit something logic
+
+' Player hit something logic
+290 GOSUB 960                                           ' show player is dead
+291 SC = SC + 100                                       ' increment score
+292 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
+293 GOSUB 8080                                          ' show player remaining lives
+294 I = 2 : GOSUB 9020                                  ' wait 2 seconds
+295 IF LV = 0 THEN RETURN 952                           ' if no more lives, game over
+296 RETURN 100                                          ' restart level
 
 ' Remaining objects logic
 300 IF TIME < OT THEN OT = TIME                          
@@ -173,15 +183,6 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 '601   EY = EY + 6 
 '602   GOSUB 8070                                         ' show egg sprite
 
-' Egg vs player collision logic
-'700 IF COLLISION(7,0) < 0 THEN RETURN                    ' if egg sprite collided with player sprite
-'701   IF PS < 4 THEN PS = 3 ELSE PS = 7                  ' player is dead
-'702     GOSUB 8050                                       ' show player sprite
-'703     CMD PLYSOUND 1                                   ' play egg collision sound effect
-'704     IF LV > 0 THEN LV = LV - 1 : GOSUB 8080          ' show lives
-'705     EY = 212 
-'706     GOTO 8070                                        ' hide egg
-
 ' Player jumping button
 800 IF PJ <> 0 THEN RETURN                              ' ignore if player is already jumping
 801   CMD PLYSOUND 7,2                                  ' player jumping sound effect 7 on channel 2 
@@ -195,46 +196,28 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 812 IF PY >= 111 THEN 820                               ' if floor, end jumping
 813 GOTO 8050                                           ' show player sprite 
 
-820 IF PS > 5 THEN PS = 6 ELSE PS = 0
-821 PJ = 0
-822 GOTO 8050
+' Player stops jumping logic
+820 IF PS > 5 THEN PS = 6 ELSE PS = 0                   ' player sprite
+821 PJ = 0                                              ' stop jumping
+822 GOSUB 8050                                          ' show player sprite
+823 GOTO 260                                            ' collision logic
 
-
-' Add score and reduce bags count
-'840 SC = SC + 1                                          ' add to score points
-'841 IF BC > 0 THEN BC = BC - 1                           ' reduce bags count
-'842 GOTO 8040                                            ' print score
-
-' Getting the car logic
-'850 GOSUB 8015                                           ' clear car tile 
-'851 GOSUB 8110                                           ' register getting the car on the scene buffer
-'852 CMD PLYSOUND 4                                       ' play getting an item sound effect
-'853 BF = 2 : GOSUB 8200                                  ' player holding the bag
-'854 GOTO 8050                                            ' show player sprite
- 
-' Releasing the car logic
-'860 IF TPS <> 32 AND TPS <> 0 THEN RETURN                ' if not an empty space, return
-'861   N = &HA2 : Y = Y + 1 : GOSUB 8010                  ' release the car on the floor
-'862   GOSUB 8130                                         ' register releasing the car on the scene buffer
-'863   BF = 0 : GOSUB 8200                                ' player handsfree flag
-'864   CMD PLYSOUND 4                                     ' play release an item sound effect
-'865   GOTO 8050                                          ' show player sprite
-
-' Next stage
+' Next stage logic
 900 LR = LR + 1 
 901 SC = SC + 100
 902 GOTO 100                                            ' go to next stage
 
-' Game over
-950 MUS = 5 : GOSUB 9030                                ' game over song
-951 GOSUB 960                                           ' player is dead
+' Game over logic
+950 GOSUB 960                                           ' player is dead
+951 GOSUB 8080                                          ' show player remaining lives
 952 GOSUB 9010                                          ' wait for player hit a button
 953 GOTO 20                                             ' restart the game
 
 ' Player is dead logic
 960 IF PS > 5 THEN PS = 11 ELSE PS = 5                  ' player is dead sprite
-961 CMD PLYSOUND 5, 2                                   ' player is dead sound effect on channel 2
-962 GOTO 8050                                           ' show player sprite 
+961 MUS = 5 : GOSUB 9030                                ' player is dead song
+962 CMD PLYSOUND 2, 2                                   ' player is dead sound effect on channel 2
+963 GOTO 8050                                           ' show player sprite 
 
 '-------------------------------------------
 ' GAME SUPPORT ROUTINES
@@ -273,7 +256,21 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8051 PUT SPRITE 0,(PX,PY),1,SS
 8052 PUT SPRITE 1,(PX,PY),11,SS+1
 8053 RETURN
- 
+
+' get tiles from player sprite edges hot spots 
+8060 X=PX/8 : Y=((PY-4)/8)                                  ' current player position in text coords 
+8061 PTTL=TILE(X,Y)                                     ' player top-left tile
+8062 PTTR=TILE(X+2,Y)                                   ' player top-right tile
+8063 PTBL=TILE(X,Y+2)                                   ' player bottom-left tile
+8064 PTBR=TILE(X+2,Y+2)                                 ' player bottom-right tile
+8065 RETURN
+
+' Show player (3 sprites starting in SS)
+8070 PUT SPRITE 0,(PX,PY),1,SS
+8071 PUT SPRITE 1,(PX,PY),11,SS+1
+8072 PUT SPRITE 7,(PX,PY),11,SS+2
+8073 RETURN
+
 ' Show lives
 8080 X = 1 : Y = 22
 8081 FOR I = 1 TO 5
@@ -301,10 +298,6 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8107 MUS = LVA(2)                                       ' song number
 8108 RETURN
 
-' dummy code
-8120 RETURN
-8130 RETURN
-
 ' Show horizon sprite
 8200 IF LVA(3) = 0 THEN RETURN                          ' if no horizon sprite, return
 8201   SS = LVA(3) + (OSF AND 1)*2
@@ -330,7 +323,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8401   RETURN
 
 ' Show stationary obstacle
-8500 IF LVA(7) = 1 THEN RETURN                          ' if bridge, return
+8500 IF LVA(8) = 0 AND LVA(9) = 0 THEN RETURN           ' if no stationary obstacle, return
 8501   X = LVA(10) : Y = 14                             ' stationary obstacle X position
 8502   N = LVA(8+(OSF AND 1))                           ' stationary obstacle tile number 
 8503   GOTO 8090                                        ' print 2x2 block (horizontal way)
