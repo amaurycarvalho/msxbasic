@@ -4,7 +4,7 @@ Game demo source code written in MSX BASIC to be compiled with MSXBAS2ROM compil
 ## Game info
 
 * Bobby is Going Home is a platform game released for the Atari 2600 console in 1983;
-* This remake for MSX systems developed by Amaury Carvalho (2025);
+* This remake for MSX systems was developed by Amaury Carvalho (2025);
 
 ### References
 
