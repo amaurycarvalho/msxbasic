@@ -37,7 +37,7 @@ Game demo source code written in MSX BASIC to be compiled with MSXBAS2ROM compil
 * [nMSXTiles for Linux](https://launchpad.net/nmsxtiles)
 * [nMSXTiles for Windows](https://github.com/pipagerardo/nMSXtiles)
 
-## Additional notes
+## Footnotes
 
 * MSXBAS2ROM is a command line tool, so you need to use a terminal shell on your PC to compile these projects;
 
