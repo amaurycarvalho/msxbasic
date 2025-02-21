@@ -54,7 +54,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Game start
 20 LR = 0                                               ' level row number in resource CSV
 21 SC = 300                                             ' player initial score
-22 LV = 4                                               ' player remainder lives
+22 LV = 5                                               ' player remainder lives
 
 ' Level initialization
 100 GOSUB 8100                                          ' load level data from resource
@@ -273,7 +273,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Show lives
 8080 X = 1 : Y = 22
-8081 FOR I = 1 TO 5
+8081 FOR I = 2 TO 6
 8082   IF I <= LV THEN C = 58 ELSE C = 32
 8083   PUT TILE C,(X, Y)
 8084   X = X + 2
