@@ -13,8 +13,8 @@ BOBBY IS STILL GOING HOME LEVELS CSV SCHEMA
    10 - stationaryEnemyX: stationary obstacle X position
    11 - flyingEnemySpriteNumber: 0=no flying enemy, other=sprite number
    12 - flyingEnemySpriteColor: flying enemy sprite color
-   13 - flyingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
+   13 - flyingEnemySpeed: 0=slowest, n=faster
    14 - rollingEnemyTile: 0=no rolling enemy, other=tile number
-   15 - rollingEnemySpeed: 0=fastest, 1=fast, 2=slow, 3=slowest
+   15 - rollingEnemySpeed: 0=slowest, n=faster
    16 - rollingEnemyQty: rolling enemy quantity on screen
 

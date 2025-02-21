@@ -63,7 +63,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 103 PT = TIME                                           ' timer for player
 104 OT = TIME : OSF = 0                                 ' timer for remaining objects and object step flag
 105 HX = 0 : HY = 58                                    ' horizon object position X and Y
-106 SX = 200 : SY = 20 : SXI = -8 : SYI = 4             ' sky object position X and Y
+106 SX = 200 : SY = 20 : SXI = -8 : SYI = 4             ' sky object position X and Y, and speed
+107 FX=150 : FY=90 : FXI= -8-LVA(13) : FYI= 4+LVA(13)   ' flying enemy position X and Y, and speed
 
 110 SCR = SCN + 4 : SPR = 12 : GOSUB 9050               ' load level screen and sprites
 111 GOSUB 9030                                          ' play level song
@@ -116,8 +117,9 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Player tiles collision logic
 260 GOSUB 8050                                          ' show player sprite
 261 GOSUB 8060                                          ' get player tiles
-262 IF PTBL >= 97 OR PTBR >= 97 THEN 290                ' player hit an obstacle or rolling enemy? 
-263 IF PY < 111 THEN 280                                ' is player in the air?
+262 IF PTBL >= 97 THEN IF ((PTBL - 97) MOD 4) >= 2 THEN 290     ' player hit an obstacle or rolling enemy? 
+263 IF PTBR >= 97 THEN IF ((PTBR - 97) MOD 4) >= 2 THEN 290     ' player hit an obstacle or rolling enemy?  
+264 IF PY < 111 THEN 280                                ' is player in the air?
 
 270 IF PTBL <> 36 OR PTBR <> 36 THEN 280                ' player not fell on a hole?
 271   MUS = 5 : GOSUB 9030                              ' player is drowning song
@@ -129,7 +131,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 277   GOTO 291                                          ' player hit something logic
 
 ' Player sprite collision logic
-280 OS = COLLISION(0,6)                                 ' check if player sprite collided with a flying enemy sprite
+280 OS = COLLISION(0,7)                                 ' check if player sprite collided with a flying enemy sprite
 281 IF OS < 0 THEN RETURN                               ' if nothing collided with player, return
 282   GOTO 290                                          ' player hit something logic
 
@@ -158,30 +160,6 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 324 GOSUB 8500                                          ' draw stationary obstacle 
 325 GOSUB 8600                                          ' draw flying enemy
 326 GOTO  8700                                          ' draw rolling enemy
-
-' Condor movement logic
-'400 CS = (CS + 1) MOD 2
-'401 CX = CX + 8
-'402 IF CX > 220 THEN CY = 212                            ' if right border: hide condor
-'403 GOSUB 8200                                           ' show condor sprite
-
-' Egg appearence logic
-'500 IF TIME < ET THEN ET = TIME                          
-'501 DI = TIME - ET
-'502 IF DI < TD THEN RETURN                               ' time step = 10x per second
-'503   ET = TIME
-
-'510 IF EY < 212 THEN 600                                 ' if egg already in action: movement logic
-'511   IF CY >= 212 THEN RETURN                           ' if condor not in action: return
-'512     GOSUB 9005                                       ' next random number
-'513     IF (R MOD 40) > ST THEN RETURN                   ' random egg appearence: higher stages = more appearences
-'514       EY = CY : EX = CX + 8 
-'515       GOTO 8070                                      ' show egg sprite
-
-' Egg movement logic
-'600 IF EY >= 212 THEN RETURN
-'601   EY = EY + 6 
-'602   GOSUB 8070                                         ' show egg sprite
 
 ' Player jumping button
 800 IF PJ <> 0 THEN RETURN                              ' ignore if player is already jumping
@@ -258,17 +236,17 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8053 RETURN
 
 ' get tiles from player sprite edges hot spots 
-8060 X=PX/8 : Y=((PY-4)/8)                                  ' current player position in text coords 
-8061 PTTL=TILE(X,Y)                                     ' player top-left tile
-8062 PTTR=TILE(X+2,Y)                                   ' player top-right tile
-8063 PTBL=TILE(X,Y+2)                                   ' player bottom-left tile
-8064 PTBR=TILE(X+2,Y+2)                                 ' player bottom-right tile
+8060 Y = (PY/8) + 2                                     ' current player position in text coords 
+8061 X = PX/8 
+8062 PTBL = TILE(X,Y)                                   ' player bottom-left tile
+8063 X = (PX+12)/8 
+8064 PTBR = TILE(X,Y)                                   ' player bottom-right tile
 8065 RETURN
 
 ' Show player (3 sprites starting in SS)
 8070 PUT SPRITE 0,(PX,PY),1,SS
 8071 PUT SPRITE 1,(PX,PY),11,SS+1
-8072 PUT SPRITE 7,(PX,PY),11,SS+2
+8072 PUT SPRITE 2,(PX,PY),11,SS+2
 8073 RETURN
 
 ' Show lives
@@ -301,8 +279,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Show horizon sprite
 8200 IF LVA(3) = 0 THEN RETURN                          ' if no horizon sprite, return
 8201   SS = LVA(3) + (OSF AND 1)*2
-8202   PUT SPRITE 2,(HX,HY),LVA(4),SS
-8203   PUT SPRITE 3,(HX+16,HY),LVA(4),SS+1
+8202   PUT SPRITE 3,(HX,HY),LVA(4),SS
+8203   PUT SPRITE 4,(HX+16,HY),LVA(4),SS+1
 8204   HX = HX + 4 : IF HX < 228 THEN RETURN
 8205   IF HY = 193 THEN HY = 58 : HX = 0 ELSE HY = 193 : HX = 100 + (R MOD 100) 
 8206   RETURN
@@ -310,8 +288,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Show sky sprite
 8300 IF LVA(5) = 0 THEN RETURN                          ' if no sky sprite, return
 8301   SS = LVA(5) + (OSF AND 1)*2
-8302   PUT SPRITE 4,(SX,SY),LVA(6),SS
-8303   PUT SPRITE 5,(SX+16,SY),LVA(6),SS+1
+8302   PUT SPRITE 5,(SX,SY),LVA(6),SS
+8303   PUT SPRITE 6,(SX+16,SY),LVA(6),SS+1
 8304   SX = SX + SXI
 8305   SY = SY + SYI
 8306   IF SX < 0 THEN SX = 0 : SXI = -SXI ELSE IF SX > 228 THEN SX = 228 : SXI = -SXI
@@ -323,14 +301,20 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8401   RETURN
 
 ' Show stationary obstacle
-8500 IF LVA(8) = 0 AND LVA(9) = 0 THEN RETURN           ' if no stationary obstacle, return
+8500 IF LVA(8)=0 OR LVA(14) > 0 THEN RETURN             ' if no stationary obstacle or rolling enemy, return
 8501   X = LVA(10) : Y = 14                             ' stationary obstacle X position
 8502   N = LVA(8+(OSF AND 1))                           ' stationary obstacle tile number 
 8503   GOTO 8090                                        ' print 2x2 block (horizontal way)
 
 ' Show flying enemy
 8600 IF LVA(11) = 0 THEN RETURN                         ' if no flying enemy, return
-8601   RETURN
+8601   SS = LVA(11) + (OSF AND 1)
+8602   PUT SPRITE 7,(FX,FY),LVA(12),SS
+8603   FX = FX + FXI
+8604   FY = FY + FYI
+8605   IF FX < 40 THEN FX = 40 : FXI = -FXI ELSE IF FX > 210 THEN FX = 210 : FXI = -FXI
+8606   IF FY < 80 THEN FY = 80 : FYI = -FYI ELSE IF FY > 100 THEN FY = 100 : FYI = -FYI
+8607   RETURN
 
 ' Show rolling enemy
 8700 IF LVA(14) = 0 THEN RETURN                         ' if no rolling enemy, return
