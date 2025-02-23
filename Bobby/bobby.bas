@@ -39,11 +39,13 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Initialization
 1 DEFINT A-Z
 2 DIM LVA(16)                                           ' level data array 
-3 DIM SB$(2,2)                                          ' scenes tiles data buffer
+3 DIM BRBUF(5,14), REBUF(47,3)                          ' bridge and rolling enemies buffer
 4 CMD PLYLOAD 0, 1                                      ' load music and effects from resources 0/1
 5 SCREEN 2,2,0 : COLOR 15,0,0 
 6 SET TILE ON                                           ' set tile mode on (locate and print stmts works like it is in text mode)
 7 IF NTSC() THEN TS = 60 : TD = 6 ELSE TS = 50 : TD = 5
+8 VRSK = BASE(10) + 64                                  ' name table pointer to sky
+9 VRRE = VRSK + 384 : VRBR = VRRE + 43                  ' name table pointer to rolling enemies and bridge in VRAM 
 
 ' Splash screen 
 10 SCR = 3 : SPR = 12 : GOSUB 9050                      ' load splash screen and sprites
@@ -58,13 +60,14 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Level initialization
 100 GOSUB 8100                                          ' load level data from resource
-101 IF STN = 0 THEN LR = LR - 7 : GOTO 100              ' if end of level data, repeat last stage
-102 PX = 0 : PY = 111 : PS = 0 : PJ = 0                 ' player x, y, sprite and jumping flag
+101 IF STN = 0 THEN LR = LR - 8 : GOTO 100              ' if end of level data, repeat last stage
+102 PX = 0 : PY = 111 : PS = 0 : PJ = 0 : PI = 4        ' player x, y, sprite, jumping flag and walking step
 103 PT = TIME                                           ' timer for player
 104 OT = TIME : OSF = 0                                 ' timer for remaining objects and object step flag
 105 HX = 0 : HY = 58                                    ' horizon object position X and Y
 106 SX = 200 : SY = 20 : SXI = -8 : SYI = 4             ' sky object position X and Y, and speed
 107 FX=150 : FY=90 : FXI= -8-LVA(13) : FYI= 4+LVA(13)   ' flying enemy position X and Y, and speed
+108 GOSUB 8800                                          ' populate bridge and rolling enemies buffer 
 
 110 SCR = SCN + 4 : SPR = 12 : GOSUB 9050               ' load level screen and sprites
 111 GOSUB 9030                                          ' play level song
@@ -76,9 +79,10 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Gameplay loop
 120 GOSUB 200                                           ' player logic 
 121 GOSUB 300                                           ' remaining objects logic
-122 IF PX >= 240 THEN 900                               ' if player reached end of stage: next stage 
+122 IF PX >= 240 THEN 900                               ' if player reached end of stage: next stage
 123 IF SC = 0 THEN 950                                  ' if nothing left: game over
-124 GOTO 120
+124 IF LVA(1) = 7 THEN IF PX > 200 THEN 910             ' if player arrived at home: do player at home logic 
+125 GOTO 120
 
 ' Player movement logic
 200 IF TIME < PT THEN PT = TIME                          
@@ -99,7 +103,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 230 IF PX >= 240 THEN RETURN                            ' if hit right border: return
 231 GOSUB 260                                           ' get left/right tiles
 232 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit an obstacle, return
-233   PX = PX + 4                                       ' moves right
+233   PX = PX + PI                                      ' moves right
 234   IF PJ <> 0 THEN PS = 4 ELSE PS = (PS + 1) MOD 4   ' change player sprite                                  
 235   GOTO 260                                          ' show player and test collision
 
@@ -110,7 +114,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 250 IF PX <= 0 THEN RETURN                              ' if hit right border: return
 251 GOSUB 260                                           ' get left/right tiles
 252 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit an obstacle, return
-253   PX = PX - 4                                       ' moves right
+253   PX = PX - PI                                      ' moves left
 254   IF PJ <> 0 THEN PS=10 ELSE PS=(PS + 1) MOD 4 + 6  ' change player sprite                                  
 255   GOTO 260                                          ' show player and test collision
 
@@ -150,7 +154,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 302 IF DI < (TD*2) THEN RETURN                          ' time step = 5x per second
 303   OT = TIME
 
-310 SC = SC - (OSF AND 1)                               ' decrease score 2x per second
+310 IF LVA(1) < 7 THEN SC = SC - (OSF AND 1)            ' if player not at home, decrease score 2x per second
 311 OSF = (OSF + 1) MOD 5                               ' change object step flag
 
 320 GOSUB 8040                                          ' draw score on screen
@@ -159,14 +163,23 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 323 GOSUB 8400                                          ' draw bridge
 324 GOSUB 8500                                          ' draw stationary obstacle 
 325 GOSUB 8600                                          ' draw flying enemy
-326 GOTO  8700                                          ' draw rolling enemy
+326 GOSUB 8700                                          ' draw rolling enemy
+327 IF LVA(1) < 7 THEN RETURN
+
+' Home sky animation
+330 BUF = HEAP()                                        ' free RAM area buffer 
+331 CMD VRAMTORAM VRSK, BUF, 192                        ' copy VRAM sky to RAM buffer
+332 POKE BUF+192,PEEK(BUF)                              ' copy first buffer tile to buffer's end 
+333 CMD RAMTOVRAM BUF+1, VRSK, 192                      ' copy RAM buffer to VRAM sky
+334 RETURN
 
 ' Player jumping button
-800 IF PJ <> 0 THEN RETURN                              ' ignore if player is already jumping
-801   CMD PLYSOUND 7,2                                  ' player jumping sound effect 7 on channel 2 
-802   PJ = -4                                           ' player jumping step
-803   IF PS > 5 THEN PS = 10 ELSE PS = 4                ' player is jumping sprite
-804   GOTO 8050                                         ' show player sprite
+800 IF LVA(1) = 7 THEN RETURN                           ' ignore if player at home
+801 IF PJ <> 0 THEN RETURN                              ' ignore if player is already jumping
+802   CMD PLYSOUND 7,2                                  ' player jumping sound effect 7 on channel 2 
+803   PJ = -4 : PI = 3                                  ' player jumping and set slow walking step
+804   IF PS > 5 THEN PS = 10 ELSE PS = 4                ' player is jumping sprite
+805   GOTO 8050                                         ' show player sprite
  
 ' Player jumping logic
 810 PY = PY + PJ
@@ -176,7 +189,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Player stops jumping logic
 820 IF PS > 5 THEN PS = 6 ELSE PS = 0                   ' player sprite
-821 PJ = 0                                              ' stop jumping
+821 PJ = 0 : PI = 4                                     ' stop jumping and set normal walking step
 822 GOSUB 8050                                          ' show player sprite
 823 GOTO 260                                            ' collision logic
 
@@ -184,6 +197,17 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 900 LR = LR + 1 
 901 SC = SC + 100
 902 GOTO 100                                            ' go to next stage
+
+' Player at home logic
+910 FOR I = 1 TO 50                                     ' add 5000 points showing the score
+911   SC = SC + 10 
+912   GOSUB 8040
+913   IF (I MOD 4) = 0 THEN CMD PLYSOUND 1, 2
+914 NEXT
+915 I = 3 : GOSUB 9020                                  ' wait 3 seconds
+916 CMD PLYMUTE
+917 LR = LR + 1
+918 GOTO 100
 
 ' Game over logic
 950 GOSUB 960                                           ' player is dead
@@ -298,7 +322,16 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Show bridge
 8400 IF LVA(7) = 0 THEN RETURN                          ' if no bridge, return
-8401   RETURN
+8401   VRBR1 = VRBR
+8402   Y = BRY
+8403   FOR I = 0 TO 2
+8404     X = VARPTR( BRBUF(0, Y+I) ) 
+8405     CMD RAMTOVRAM X, VRBR1, 10                     ' copy ram buffer to vram
+8406     VRBR1 = VRBR1 + 32                             ' next line
+8407   NEXT
+8408   BRY = BRY + BRI
+8409   IF BRY < 0 OR BRY > 12 THEN BRI = -BRI : BRY = BRY + BRI
+8410   GOTO 260                                         ' player collision logic
 
 ' Show stationary obstacle
 8500 IF LVA(8)=0 OR LVA(14) > 0 THEN RETURN             ' if no stationary obstacle or rolling enemy, return
@@ -312,13 +345,67 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8602   PUT SPRITE 7,(FX,FY),LVA(12),SS
 8603   FX = FX + FXI
 8604   FY = FY + FYI
-8605   IF FX < 40 THEN FX = 40 : FXI = -FXI ELSE IF FX > 210 THEN FX = 210 : FXI = -FXI
-8606   IF FY < 80 THEN FY = 80 : FYI = -FYI ELSE IF FY > 100 THEN FY = 100 : FYI = -FYI
-8607   RETURN
+8610   IF FXI > 0 THEN 8620                             ' if moving to right, go to moving right logic
+8611     IF FX > 80 OR FX < 40 THEN 8630                ' else it's moving left, so if not in first 1/3 of screen go to borders logic
+8612       GOTO 8621                                    '   else go to change direction logic
+8620     IF FX < 160 OR FX > 210 THEN 8630              ' moving right logic: if not in last 1/3 of screen go to border logic 
+8621       GOSUB 9005 : IF R < 10 THEN FXI = -FXI       '   change direction logic: 10% of chance to swap direction  
+8630   IF FX < 40 THEN FX = 40 : FXI = -FXI ELSE IF FX > 210 THEN FX = 210 : FXI = -FXI     ' left/right border logic
+8631   IF FY < 80 THEN FY = 80 : FYI = -FYI ELSE IF FY > 100 THEN FY = 100 : FYI = -FYI     ' top/bottom border logic
+8632   GOTO 260                                         ' player collision logic
 
 ' Show rolling enemy
-8700 IF LVA(14) = 0 THEN RETURN                         ' if no rolling enemy, return
-8701   RETURN
+8700 IF LVA(14) = 0 OR LVA(7) = 1 THEN RETURN           ' if no rolling enemy or there's a bridge, return
+8701   Y = (OSF AND 1)*2
+8702   X = VARPTR( REBUF(0, Y) ) + REX
+8703   CMD RAMTOVRAM X, VRRE, 32                        ' copy ram buffer to vram
+8704   X = VARPTR( REBUF(0, Y+1) ) + REX
+8705   CMD RAMTOVRAM X, VRRE+32, 32
+8706   REX = REX + 1 + LVA(15)                          ' rolling enemy speed
+8707   IF REX > 48 THEN REX = 0
+8708   GOTO 260                                         ' player collision logic
+
+' Populate bridge and rolling enemies buffer 
+' --> bridge closed
+8800 BRBUF(0, 0) = &h2323 : BRBUF(1, 0) = &h2323 : BRBUF(2, 0) = &h2323 : BRBUF(3, 0) = &h2323 : BRBUF(4, 0) = &h2323
+8801 BRBUF(0, 1) = &h2222 : BRBUF(1, 1) = &h2222 : BRBUF(2, 1) = &h2222 : BRBUF(3, 1) = &h2222 : BRBUF(4, 1) = &h2222
+8802 BRBUF(0, 2) = &h2222 : BRBUF(1, 2) = &h2525 : BRBUF(2, 2) = &h2424 : BRBUF(3, 2) = &h2525 : BRBUF(4, 2) = &h2222
+' --> bridge start to open
+8803 BRBUF(0, 3) = &h2323 : BRBUF(1, 3) = &h2323 : BRBUF(2, 3) = &h2424 : BRBUF(3, 3) = &h2323 : BRBUF(4, 3) = &h2323
+8804 BRBUF(0, 4) = &h2222 : BRBUF(1, 4) = &h2222 : BRBUF(2, 4) = &h2424 : BRBUF(3, 4) = &h2222 : BRBUF(4, 4) = &h2222
+8805 BRBUF(0, 5) = &h2222 : BRBUF(1, 5) = &h2525 : BRBUF(2, 5) = &h2424 : BRBUF(3, 5) = &h2525 : BRBUF(4, 5) = &h2222
+' --> bridge mid opened
+8806 BRBUF(0, 6) = &h2323 : BRBUF(1, 6) = &h2423 : BRBUF(2, 6) = &h2424 : BRBUF(3, 6) = &h2324 : BRBUF(4, 6) = &h2323
+8807 BRBUF(0, 7) = &h2222 : BRBUF(1, 7) = &h2422 : BRBUF(2, 7) = &h2424 : BRBUF(3, 7) = &h2224 : BRBUF(4, 7) = &h2222
+8808 BRBUF(0, 8) = &h2522 : BRBUF(1, 8) = &h2424 : BRBUF(2, 8) = &h2424 : BRBUF(3, 8) = &h2424 : BRBUF(4, 8) = &h2225
+' --> bridge almost opened
+8809 BRBUF(0, 9) = &h2323 : BRBUF(1, 9) = &h2424 : BRBUF(2, 9) = &h2424 : BRBUF(3, 9) = &h2424 : BRBUF(4, 9) = &h2323
+8810 BRBUF(0,10) = &h2222 : BRBUF(1,10) = &h2424 : BRBUF(2,10) = &h2424 : BRBUF(3,10) = &h2424 : BRBUF(4,10) = &h2222
+8811 BRBUF(0,11) = &h2522 : BRBUF(1,11) = &h2424 : BRBUF(2,11) = &h2424 : BRBUF(3,11) = &h2424 : BRBUF(4,11) = &h2225
+' --> bridge almost opened
+8812 BRBUF(0,12) = &h2423 : BRBUF(1,12) = &h2424 : BRBUF(2,12) = &h2424 : BRBUF(3,12) = &h2424 : BRBUF(4,12) = &h2324
+8813 BRBUF(0,13) = &h2422 : BRBUF(1,13) = &h2424 : BRBUF(2,13) = &h2424 : BRBUF(3,13) = &h2424 : BRBUF(4,13) = &h2224
+8814 BRBUF(0,14) = &h2422 : BRBUF(1,14) = &h2424 : BRBUF(2,14) = &h2424 : BRBUF(3,14) = &h2424 : BRBUF(4,14) = &h2224
+8815 BRY = 0                                            ' bridge Y offset
+8816 BRI = 3                                            ' bridge Y increment
+' --> clear rolling enemies buffer
+8820 FOR Y = 0 TO 3                                     ' rolling enemies lines
+8821   IF (Y AND 1) = 0 THEN C = &h2424 ELSE C = &h2323 ' empty space or floor tile
+8822   FOR X = 0 TO 47                                  ' rolling enemies columns
+8823     REBUF(X,Y) = C
+8824   NEXT
+8825 NEXT
+' --> populate rolling enemies
+8830 X = 16                                             ' 2nd screen position on the buffer
+8831 FOR I = 1 TO LVA(16)                               ' rolling enemies quantity
+8832   REBUF(X,0) = ((LVA(14)+1) SHL 8) OR LVA(14)      ' tile animation 1
+8833   REBUF(X,1) = ((LVA(14)+3) SHL 8) OR (LVA(14)+2)
+8834   REBUF(X,2) = ((LVA(14)+5) SHL 8) OR (LVA(14)+4)  ' tile animation 2
+8835   REBUF(X,3) = ((LVA(14)+7) SHL 8) OR (LVA(14)+6)
+8836   X = X + 4                                        ' 6 tiles of space
+8837 NEXT
+8838 REX = 0                                            ' rolling enemies X offset
+8839 RETURN
 
 '-------------------------------------------
 ' GENERAL SUPPORT ROUTINES
