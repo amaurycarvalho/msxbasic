@@ -1,5 +1,5 @@
 '-----------------------------------------------------------------
-' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.0.1)
+' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.0.2)
 '-----------------------------------------------------------------
 ' Game Info:
 '   Bobby is Going Home is a platform game released for the Atari 2600 console in 1983.
@@ -57,17 +57,19 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 20 LR = 0                                               ' level row number in resource CSV
 21 SC = 300                                             ' player initial score
 22 LV = 5                                               ' player remainder lives
+23 STI = 0                                              ' stage increment
 
 ' Level initialization
 100 GOSUB 8100                                          ' load level data from resource
-101 IF STN = 0 THEN LR = LR - 8 : GOTO 100              ' if end of level data, repeat last stage
+101 IF STN = 0 THEN LR=LR-8 : STI=STI+1 : GOTO 100      ' if end of level data, repeat last stage with a plus
 102 PX = 0 : PY = 111 : PS = 0 : PJ = 0 : PI = 4        ' player x, y, sprite, jumping flag and walking step
 103 PT = TIME                                           ' timer for player
 104 OT = TIME : OSF = 0                                 ' timer for remaining objects and object step flag
 105 HX = 0 : HY = 58                                    ' horizon object position X and Y
 106 SX = 200 : SY = 20 : SXI = -8 : SYI = 4             ' sky object position X and Y, and speed
 107 FX=150 : FY=90 : FXI= -8-LVA(12) : FYI= 4+LVA(12)   ' flying enemy position X and Y, and speed
-108 GOSUB 8800                                          ' populate bridge and rolling enemies buffer 
+108 RST = 0                                             ' restart flag and stage increment
+109 GOSUB 8800                                          ' populate bridge and rolling enemies buffer 
 
 110 SCR = SCN + 4 : SPR = 12 : GOSUB 9050               ' load level screen and sprites
 111 GOSUB 9030                                          ' play level song
@@ -78,11 +80,14 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' Gameplay loop
 120 GOSUB 200                                           ' player logic 
-121 GOSUB 300                                           ' remaining objects logic
-122 IF PX >= 240 THEN 900                               ' if player reached end of stage: next stage
-123 IF SC = 0 THEN 950                                  ' if nothing left: game over
-124 IF LVA(1) = 7 THEN IF PX > 200 THEN 910             ' if player arrived at home: do player at home logic 
-'125 IF INKEY = 9 THEN LR = LR + 1 : GOTO 100
+121 IF SC = 0 OR LV = 0 THEN 950                        ' if no score left or no more lives: game over
+122 IF RST = 1 THEN 100                                 ' if restart is flagged: restart stage
+123 GOSUB 300                                           ' remaining objects logic
+124 IF SC = 0 OR LV = 0 THEN 950                        ' if no score left or no more lives: game over
+125 IF RST = 1 THEN 100                                 ' if restart is flagged: restart stage
+126 IF PX >= 240 THEN 900                               ' if player reached end of stage: next stage
+127 IF LVA(1) = 7 THEN IF PX > 200 THEN 910             ' if player arrived at home: do player at home logic 
+'128 IF INKEY = 9 THEN LR = LR + 1 : GOTO 100
 130 GOTO 120
 
 ' Player movement logic
@@ -94,7 +99,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 210 GOSUB 9000                                          ' get player input
 211 IF K  <> 0 GOSUB 800                                ' player press the button?
 212 IF PJ <> 0 GOSUB 810                                ' is player jumping?
-213 ON J GOTO 220, 219, 230, 219, 240, 219, 250, 219    ' player press the stick? 
+213 IF RST = 1 THEN RETURN                              ' if restart is flagged: return
+214 ON J GOTO 220, 219, 230, 219, 240, 219, 250, 219    ' player press the stick? 
 219   RETURN
 
 ' --> player moves UP
@@ -102,22 +108,18 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 ' --> player moves RIGHT
 230 IF PX >= 240 THEN RETURN                            ' if hit right border: return
-231 GOSUB 260                                           ' get left/right tiles
-232 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit an obstacle, return
-233   PX = PX + PI                                      ' moves right
-234   IF PJ <> 0 THEN PS = 4 ELSE PS = (PS + 1) MOD 4   ' change player sprite                                  
-235   GOTO 260                                          ' show player and test collision
+231   PX = PX + PI                                      ' moves right
+232   IF PJ <> 0 THEN PS = 4 ELSE PS = (PS + 1) MOD 4   ' change player sprite                                  
+233   GOTO 260                                          ' show player and test collision
 
 ' --> player moves DOWN 
 240 RETURN
 
 ' --> player moves LEFT
 250 IF PX <= 0 THEN RETURN                              ' if hit right border: return
-251 GOSUB 260                                           ' get left/right tiles
-252 IF TR1 > 128 OR TR2 > 128 THEN RETURN               ' if hit an obstacle, return
-253   PX = PX - PI                                      ' moves left
-254   IF PJ <> 0 THEN PS=10 ELSE PS=(PS + 1) MOD 4 + 6  ' change player sprite                                  
-255   GOTO 260                                          ' show player and test collision
+251   PX = PX - PI                                      ' moves left
+252   IF PJ <> 0 THEN PS=10 ELSE PS=(PS + 1) MOD 4 + 6  ' change player sprite                                  
+253   GOTO 260                                          ' show player and test collision
 
 ' Player tiles collision logic
 260 GOSUB 8050                                          ' show player sprite
@@ -128,12 +130,14 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 
 270 IF PTBL <> 36 OR PTBR <> 36 THEN 280                ' player not fell on a hole?
 271   MUS = 5 : GOSUB 9030                              ' player is drowning song
-272   FOR SS = 24 TO 32 STEP 3
-273     GOSUB 8070                                      ' player is drowning sprite
-274     CMD PLYSOUND 6, 2                               ' player is drowning sound effect on channel 2
-275     I = 1 : GOSUB 9020                              ' wait 1 second
-276   NEXT
-277   GOTO 291                                          ' player hit something logic
+272   GOSUB 340                                         ' player loses 1 life logic
+273   FOR SS = 24 TO 32 STEP 3
+274     GOSUB 8070                                      ' player is drowning sprite
+275     CMD PLYSOUND 6, 2                               ' player is drowning sound effect on channel 2
+276     I = 1 : GOSUB 9020                              ' wait 1 second
+277   NEXT
+278   I = 1 
+279   GOTO 9020                                         ' wait 1 second
 
 ' Player sprite collision logic
 280 OS = COLLISION(0,7)                                 ' check if player sprite collided with a flying enemy sprite
@@ -145,13 +149,11 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 286   GOTO 290                                          ' player hit something logic
 
 ' Player hit something logic
-290 GOSUB 960                                           ' show player is dead
-291 SC = SC + 100                                       ' increment score
-292 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
-293 GOSUB 8080                                          ' show player remaining lives
-294 I = 2 : GOSUB 9020                                  ' wait 2 seconds
-295 IF LV = 0 THEN RETURN 952                           ' if no more lives, game over
-296 RETURN 100                                          ' restart level
+290 GOSUB 340                                           ' player loses 1 life logic
+291 GOSUB 960                                           ' show player is dead
+292 IF LV = 0 THEN RETURN                               ' if no more lives, game over
+293   I = 2 
+294   GOTO 9020                                         ' wait 2 seconds
 
 ' Remaining objects logic
 300 IF TIME < OT THEN OT = TIME                          
@@ -169,7 +171,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 324 GOSUB 8500                                          ' draw stationary obstacle 
 325 GOSUB 8600                                          ' draw flying enemy
 326 GOSUB 8700                                          ' draw rolling enemy
-327 IF LVA(1) < 7 THEN RETURN
+327 GOSUB 260                                           ' player collision logic
+328 IF LVA(1) < 7 THEN RETURN
 
 ' Home sky animation
 330 BUF = HEAP()                                        ' free RAM area buffer 
@@ -177,6 +180,12 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 332 POKE BUF+192,PEEK(BUF)                              ' copy first buffer tile to buffer's end 
 333 CMD RAMTOVRAM BUF+1, VRSK, 192                      ' copy RAM buffer to VRAM sky
 334 RETURN
+
+' Player loses 1 life logic
+340 SC = SC + 100                                       ' increment score
+341 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
+342 RST = 1                                             ' restart level
+343 RETURN
 
 ' Player jumping button
 800 IF LVA(1) = 7 THEN RETURN                           ' ignore if player at home
@@ -206,7 +215,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Player at home logic
 910 FOR I = 1 TO 50                                     ' add 5000 points showing the score
 911   SC = SC + 10 
-912   GOSUB 8040
+912   GOSUB 8040                                        ' show score
 913   IF (I MOD 4) = 0 THEN CMD PLYSOUND 1, 2
 914 NEXT
 915 I = 3 : GOSUB 9020                                  ' wait 3 seconds
@@ -215,8 +224,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 918 GOTO 100
 
 ' Game over logic
-950 GOSUB 960                                           ' player is dead
-951 GOSUB 8080                                          ' show player remaining lives
+950 GOSUB 8080                                          ' show player remaining lives
+951 GOSUB 8040                                          ' show score
 952 GOSUB 9010                                          ' wait for player hit a button
 953 GOTO 20                                             ' restart the game
 
@@ -250,7 +259,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8019 RETURN
 
 ' Show stage STN 
-8030 LOCATE 14,22 : PRINT USING$("###", STN);
+8030 LOCATE 14,22 : PRINT USING$("###", STN+STI);
 8031 RETURN
 
 ' Print score 
@@ -275,7 +284,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Show player (3 sprites starting in SS)
 8070 PUT SPRITE 0,(PX,PY),1,SS
 8071 PUT SPRITE 1,(PX,PY),11,SS+1
-8072 PUT SPRITE 2,(PX,PY),11,SS+2
+8072 PUT SPRITE 2,(PX,PY),4,SS+2
 8073 RETURN
 
 ' Show lives
@@ -343,7 +352,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8407   NEXT
 8408   BRY = BRY + BRI
 8409   IF BRY < 0 OR BRY > 12 THEN BRI = -BRI : BRY = BRY + BRI
-8410   GOTO 260                                         ' player collision logic
+8410   RETURN
 
 ' Show stationary obstacle
 8500 IF LVA(8)=0 OR LVA(13) > 0 THEN RETURN             ' if no stationary obstacle or rolling enemy, return
@@ -364,7 +373,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8621       GOSUB 9005 : IF R < 10 THEN FXI = -FXI       '   change direction logic: 10% of chance to swap direction  
 8630   IF FX < 40 THEN FX = 40 : FXI = -FXI ELSE IF FX > 210 THEN FX = 210 : FXI = -FXI     ' left/right border logic
 8631   IF FY < 80 THEN FY = 80 : FYI = -FYI ELSE IF FY > 110 THEN FY = 110 : FYI = -FYI     ' top/bottom border logic
-8632   GOTO 260                                         ' player collision logic
+8632   RETURN
 
 ' Show rolling enemy
 8700 IF LVA(13) = 0 OR LVA(7) = 1 THEN RETURN           ' if no rolling enemy or there's a bridge, return
@@ -376,7 +385,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 8710   REX = REX + 1 + LVA(14)                          ' rolling enemy speed
 8711   IF LVA(15) < 4 THEN DX = 48 ELSE DX = 56
 8712   IF REX > DX THEN REX = 0
-8713   GOTO 260                                         ' player collision logic
+8713   RETURN
 
 ' Populate bridge and rolling enemies buffer 
 ' --> bridge closed
