@@ -82,13 +82,16 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 120 GOSUB 200                                           ' player logic 
 121 IF SC = 0 OR LV = 0 THEN 950                        ' if no score left or no more lives: game over
 122 IF RST = 1 THEN 100                                 ' if restart is flagged: restart stage
-123 GOSUB 300                                           ' remaining objects logic
-124 IF SC = 0 OR LV = 0 THEN 950                        ' if no score left or no more lives: game over
-125 IF RST = 1 THEN 100                                 ' if restart is flagged: restart stage
-126 IF PX >= 240 THEN 900                               ' if player reached end of stage: next stage
-127 IF LVA(1) = 7 THEN IF PX > 200 THEN 910             ' if player arrived at home: do player at home logic 
-'128 IF INKEY = 9 THEN LR = LR + 1 : GOTO 100
-130 GOTO 120
+
+130 GOSUB 300                                           ' remaining objects logic
+131 IF SC = 0 OR LV = 0 THEN 950                        ' if no score left or no more lives: game over
+132 IF RST = 1 THEN 100                                 ' if restart is flagged: restart stage
+
+140 IF PX >= 240 THEN 900                               ' if player reached end of stage: next stage
+141 IF LVA(1) = 7 THEN IF PX > 200 THEN 910             ' if player arrived at home: do player at home logic 
+'142 IF INKEY = 9 THEN LR = LR + 1 : GOTO 100
+
+150 GOTO 120
 
 ' Player movement logic
 200 IF TIME < PT THEN PT = TIME                          
@@ -199,7 +202,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 810 PY = PY + PJ
 811 IF PY <= 80 THEN PJ = 4                             ' if roof, reverse jumping
 812 IF PY >= 111 THEN 820                               ' if floor, end jumping
-813 GOTO 8050                                           ' show player sprite 
+813 GOSUB 8050                                          ' show player sprite 
+814 GOTO 260                                            ' collision logic
 
 ' Player stops jumping logic
 820 IF PS > 5 THEN PS = 6 ELSE PS = 0                   ' player sprite
