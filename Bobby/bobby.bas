@@ -1,5 +1,5 @@
 '-----------------------------------------------------------------
-' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.0.2)
+' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.1.0)
 '-----------------------------------------------------------------
 ' Game Info:
 '   Bobby is Going Home is a platform game released for the Atari 2600 console in 1983.
@@ -62,14 +62,8 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Level initialization
 100 GOSUB 8100                                          ' load level data from resource
 101 IF STN = 0 THEN LR=LR-8 : STI=STI+1 : GOTO 100      ' if end of level data, repeat last stage with a plus
-102 PX = 0 : PY = 111 : PS = 0 : PJ = 0 : PI = 4        ' player x, y, sprite, jumping flag and walking step
-103 PT = TIME                                           ' timer for player
-104 OT = TIME : OSF = 0                                 ' timer for remaining objects and object step flag
-105 HX = 0 : HY = 58                                    ' horizon object position X and Y
-106 SX = 200 : SY = 20 : SXI = -8 : SYI = 4             ' sky object position X and Y, and speed
-107 FX=150 : FY=90 : FXI= -8-LVA(12) : FYI= 4+LVA(12)   ' flying enemy position X and Y, and speed
-108 RST = 0                                             ' restart flag and stage increment
-109 GOSUB 8800                                          ' populate bridge and rolling enemies buffer 
+102 GOSUB 400                                           ' level data initialization
+103 GOSUB 8800                                          ' populate bridge and rolling enemies buffer 
 
 110 SCR = SCN + 4 : SPR = 12 : GOSUB 9050               ' load level screen and sprites
 111 GOSUB 9030                                          ' play level song
@@ -182,13 +176,33 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 331 CMD VRAMTORAM VRSK, BUF, 192                        ' copy VRAM sky to RAM buffer
 332 POKE BUF+192,PEEK(BUF)                              ' copy first buffer tile to buffer's end 
 333 CMD RAMTOVRAM BUF+1, VRSK, 192                      ' copy RAM buffer to VRAM sky
-334 RETURN
+
+' Home special character animation
+334 PUT TILE HSCT + HSCS,(24, 10)                       ' home special character tile + step
+335 IF HSCS = 0 THEN HSCI = 1 : GOTO 337
+336 IF HSCS = 6 THEN HSCI = -1
+337 HSCS = HSCS + HSCI
+338 RETURN
 
 ' Player loses 1 life logic
 340 SC = SC + 100                                       ' increment score
 341 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
 342 RST = 1                                             ' restart level
 343 RETURN
+
+' Level data initialization
+400 PX = 0 : PY = 111 : PS = 0 : PJ = 0 : PI = 4        ' player x, y, sprite, jumping flag and walking step
+401 PT = TIME                                           ' timer for player
+402 OT = TIME : OSF = 0                                 ' timer for remaining objects and object step flag
+403 HX = 0 : HY = 58                                    ' horizon object position X and Y
+404 SX = 200 : SY = 20 : SXI = -8 : SYI = 4             ' sky object position X and Y, and speed
+405 FX=150 : FY=90 : FXI= -8-LVA(12) : FYI= 4+LVA(12)   ' flying enemy position X and Y, and speed
+406 RST = 0                                             ' restart flag and stage increment
+407 HSCN = (STN - 1) MOD 5                              ' home special character related to stage number (0 - 4)
+408 HSCT = 129 + HSCN*7                                 ' home special character initial tile
+409 HSCS = 0                                            ' home special character tile step
+410 HSCI = 1                                            ' home special character tile increment
+411 RETURN
 
 ' Player jumping button
 800 IF LVA(1) = 7 THEN RETURN                           ' ignore if player at home
