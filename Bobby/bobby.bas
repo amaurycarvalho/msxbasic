@@ -1,5 +1,5 @@
 '-----------------------------------------------------------------
-' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.1.0)
+' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.1.1)
 '-----------------------------------------------------------------
 ' Game Info:
 '   Bobby is Going Home is a platform game released for the Atari 2600 console in 1983.
@@ -35,6 +35,7 @@ FILE "img/scene5.SC2"                                   ' 9 - scene 5 screen (ed
 FILE "img/scene6.SC2"                                   ' 10 - scene 6 screen (edited via nMSXTiles)
 FILE "img/scene7.SC2"                                   ' 11 - scene 7 screen (edited via nMSXTiles)
 FILE "img/bobby.spr"                                    ' 12 - sprites bank (plain text, edited via Tiny Sprite)
+FILE "img/flanders.SC2"                                 ' 13 - bobby's inspired song in YouTube QR-Code (edited via nMSXTiles)
 
 ' Initialization
 1 DEFINT A-Z
@@ -50,7 +51,7 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 ' Splash screen 
 10 SCR = 3 : SPR = 12 : GOSUB 9050                      ' load splash screen and sprites
 11 MUS = 6 : GOSUB 9030                                 ' play splash screen song
-12 GOSUB 9010                                           ' wait for player hit a button
+12 GOSUB 500                                            ' wait for player hit a button alternating screens
 13 CMD PLYMUTE                                          ' mute song
 
 ' Game start
@@ -203,6 +204,20 @@ FILE "img/bobby.spr"                                    ' 12 - sprites bank (pla
 409 HSCS = 0                                            ' home special character tile step
 410 HSCI = 1                                            ' home special character tile increment
 411 RETURN
+
+' Splash screen / youtube QR-Code
+500 OT = TIME 
+501 TT = TS*10                                          ' TT = 10 seconds
+
+510 GOSUB 9000                                          ' get player input
+511 IF K <> 0 THEN RETURN
+
+520 IF TIME < OT THEN OT = TIME
+521 DI = TIME - OT
+522 IF DI < TT THEN 510                                 ' wait for TT seconds
+523   IF SCR = 3 THEN SCR = 13 ELSE SCR = 3             ' alternate screens
+524   GOSUB 9050                                        ' load splash screen and sprites
+525   GOTO 500
 
 ' Player jumping button
 800 IF LVA(1) = 7 THEN RETURN                           ' ignore if player at home
