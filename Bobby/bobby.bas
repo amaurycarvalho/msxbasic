@@ -35,7 +35,7 @@ FILE "img/scene5.SC2"                                   ' 9 - scene 5 screen (ed
 FILE "img/scene6.SC2"                                   ' 10 - scene 6 screen (edited via nMSXTiles)
 FILE "img/scene7.SC2"                                   ' 11 - scene 7 screen (edited via nMSXTiles)
 FILE "img/bobby.spr"                                    ' 12 - sprites bank (plain text, edited via Tiny Sprite)
-FILE "img/flanders.SC2"                                 ' 13 - bobby's inspired song in YouTube QR-Code (edited via nMSXTiles)
+FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bobby-inspired song on YouTube (edited via nMSXTiles)
 
 ' Initialization
 1 DEFINT A-Z
@@ -206,18 +206,18 @@ FILE "img/flanders.SC2"                                 ' 13 - bobby's inspired 
 411 RETURN
 
 ' Splash screen / youtube QR-Code
-500 OT = TIME 
-501 TT = TS*10                                          ' TT = 10 seconds
+500 TT = TS*20                                          ' TT = 20 seconds
+501 OT = TIME 
 
 510 GOSUB 9000                                          ' get player input
 511 IF K <> 0 THEN RETURN
 
 520 IF TIME < OT THEN OT = TIME
 521 DI = TIME - OT
-522 IF DI < TT THEN 510                                 ' wait for TT seconds
-523   IF SCR = 3 THEN SCR = 13 ELSE SCR = 3             ' alternate screens
-524   GOSUB 9050                                        ' load splash screen and sprites
-525   GOTO 500
+522 IF DI < TT THEN 510                                                 ' wait for TT seconds
+523   IF SCR = 3 THEN SCR = 13 : TT = TS*10 ELSE SCR = 3 : TT = TS*20   ' alternate screens
+524   GOSUB 9050                                                        ' load splash screen and sprites
+525   GOTO 501                                                          ' repeat
 
 ' Player jumping button
 800 IF LVA(1) = 7 THEN RETURN                           ' ignore if player at home
@@ -259,8 +259,9 @@ FILE "img/flanders.SC2"                                 ' 13 - bobby's inspired 
 ' Game over logic
 950 GOSUB 8080                                          ' show player remaining lives
 951 GOSUB 8040                                          ' show score
-952 GOSUB 9010                                          ' wait for player hit a button
-953 GOTO 20                                             ' restart the game
+952 I = 2 : GOSUB 9020                                  ' wait 2 seconds
+953 GOSUB 9010                                          ' wait for player hit a button
+954 GOTO 20                                             ' restart the game
 
 ' Player is dead logic
 960 IF PS > 5 THEN PS = 11 ELSE PS = 5                  ' player is dead sprite
