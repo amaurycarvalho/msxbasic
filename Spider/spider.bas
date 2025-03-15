@@ -36,8 +36,9 @@ FILE "img/spider.spr"           ' 3 - Sprites (exported from TinySprite)
 23 SPRITE LOAD 3                ' Load game sprites (TXT file created with TinySprite) it do on SCREEN 0 or 1)
 24 SET FONT 0                   ' Load system default font 
 
-30 CMD PLYSONG 0                ' Load game song theme from arkos tracker music resource (Bach Invention 14)
-31 CMD PLYPLAY                  ' Play theme
+30 CMD PLYLOAD 0, 1             ' load music and effects from resources 0 and 1 (Arkos Tracker exported files)
+31 CMD PLYSONG 0                ' Load game song theme (Bach Invention 14)
+32 CMD PLYPLAY                  ' Play theme
 
 40 LOCATE 00, 00 : PRINT "SHOOT THE SPIDER!";
 41 LOCATE 22, 00 : PRINT "HITS:";
