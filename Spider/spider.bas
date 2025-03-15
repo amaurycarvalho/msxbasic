@@ -42,7 +42,7 @@ FILE "img/spider.spr"           ' 3 - Sprites (exported from TinySprite)
 
 40 LOCATE 00, 00 : PRINT "SHOOT THE SPIDER!";
 41 LOCATE 22, 00 : PRINT "HITS:";
-42 SCREEN ON         ' Enable screen
+42 SCREEN ON                    ' Enable screen
 
 ' Player start position and score
 50 PX = 8
