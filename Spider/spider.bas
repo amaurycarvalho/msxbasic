@@ -31,7 +31,7 @@ FILE "img/spider.spr"           ' 3 - Sprites (exported from TinySprite)
 
 ' Screen initialization
 20 SCREEN OFF                   ' Disable screen
-21 SET TILE ON                  ' Activate tiled text mode (print text in the same way21 CMD PLYLOAD 0, 1             ' Load music and sound effect resources
+21 SET TILE ON                  ' Activate tiled text mode (print text in the same way SCREEN modes 0 and 1 do)
 22 SCREEN LOAD 2                ' Load game screen resource (similar to BLOAD "file.SC2",S, created with NMSXTILES)
 23 SPRITE LOAD 3                ' Load game sprites (TXT file created with TinySprite) it do on SCREEN 0 or 1)
 24 SET FONT 0                   ' Load system default font 
