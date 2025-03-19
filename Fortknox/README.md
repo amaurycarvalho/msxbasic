@@ -1,4 +1,4 @@
-# DRAGON TREASURE
+# FORTKNOX
 Game demo source code written in MSX BASIC to be compiled with MSXBAS2ROM compiler
 
 ## Game info
