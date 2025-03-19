@@ -20,8 +20,8 @@
 
 ' Resources
 FILE "music/spider.akm"         ' 0 - Music (exported from Arkos Tracker 3)
-FILE "music/effects.akx"        ' 1 - Sound Effects (exported from Arkos Tracker 2)
-FILE "img/spider.SC2"           ' 2 - Tiles Patterns (exported from nMSXTiles)
+FILE "music/effects.akx"        ' 1 - Sound Effects (exported from Arkos Tracker 3)
+FILE "img/spider.SC2"           ' 2 - Game screen (exported from nMSXTiles, same as BSAVE "filename",S)
 FILE "img/spider.spr"           ' 3 - Sprites (exported from TinySprite)
 
 ' Game initialization
@@ -33,7 +33,7 @@ FILE "img/spider.spr"           ' 3 - Sprites (exported from TinySprite)
 20 SCREEN OFF                   ' Disable screen
 21 SET TILE ON                  ' Activate tiled text mode (print text in the same way SCREEN modes 0 and 1 do)
 22 SCREEN LOAD 2                ' Load game screen resource (similar to BLOAD "file.SC2",S, created with NMSXTILES)
-23 SPRITE LOAD 3                ' Load game sprites (TXT file created with TinySprite) it do on SCREEN 0 or 1)
+23 SPRITE LOAD 3                ' Load game sprites (TXT file created with TinySprite) 
 24 SET FONT 0                   ' Load system default font 
 
 30 CMD PLYLOAD 0, 1             ' load music and effects from resources 0 and 1 (Arkos Tracker exported files)
@@ -42,7 +42,7 @@ FILE "img/spider.spr"           ' 3 - Sprites (exported from TinySprite)
 
 40 LOCATE 00, 00 : PRINT "SHOOT THE SPIDER!";
 41 LOCATE 22, 00 : PRINT "HITS:";
-42 SCREEN ON                    ' Enable screen
+42 SCREEN ON                                ' Enable screen
 
 ' Player start position and score
 50 PX = 8
