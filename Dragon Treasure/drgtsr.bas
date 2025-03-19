@@ -4,7 +4,7 @@
 ' Game Info:
 '   Dragonfire is a 1982 game written by Bob Smith and published by Imagic for Atari 2600
 '   Remake to MSX1 created by Amaury Carvalho (2023):
-'     https://github.com/amaurycarvalho/msxbasic/Dragon Treasure
+'     https://github.com/amaurycarvalho/msxbasic/Dragon%20Treasure
 '-----------------------------------------------------------------
 ' Stack:
 '   https://github.com/amaurycarvalho/msxbas2rom/
