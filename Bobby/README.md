@@ -26,7 +26,7 @@ Game demo source code written in MSX BASIC to be compiled with MSXBAS2ROM compil
 
 ### Repository
 
-* [Source code on Github](https://github.com/amaurycarvalho/msxbasic/Bobby)
+* [Source code on Github](https://github.com/amaurycarvalho/msxbasic/tree/main/Bobby)
 
 ## Development tools
 
