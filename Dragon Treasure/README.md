@@ -20,7 +20,7 @@ Game demo source code written in MSX BASIC to be compiled with MSXBAS2ROM compil
 
 ### Repository
 
-* [Source code on Github](https://github.com/amaurycarvalho/msxbasic/Dragon%20Treasure)
+* [Source code on Github](https://github.com/amaurycarvalho/msxbasic/tree/main/Dragon%20Treasure)
 
 ## Development tools
 
