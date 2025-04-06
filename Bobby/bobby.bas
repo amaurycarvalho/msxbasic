@@ -1,5 +1,5 @@
 '-----------------------------------------------------------------
-' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.1.1)
+' BOBBY IS STILL GOING HOME - MSXBAS2ROM DEMO (v.1.2)
 '-----------------------------------------------------------------
 ' Game Info:
 '   Bobby is Going Home is a platform game released for the Atari 2600 console in 1983.
@@ -59,6 +59,7 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 21 SC = 300                                             ' player initial score
 22 LV = 5                                               ' player remainder lives
 23 STI = 0                                              ' stage increment
+24 HS = 1000                                            ' high score 
 
 ' Level initialization
 100 GOSUB 8100                                          ' load level data from resource
@@ -187,9 +188,10 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 
 ' Player loses 1 life logic
 340 SC = SC + 100                                       ' increment score
-341 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
-342 RST = 1                                             ' restart level
-343 RETURN
+341 GOSUB 600                                           ' check high score
+342 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
+343 RST = 1                                             ' restart level
+344 RETURN
 
 ' Level data initialization
 400 PX = 0 : PY = 111 : PS = 0 : PJ = 0 : PI = 4        ' player x, y, sprite, jumping flag and walking step
@@ -219,6 +221,16 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 524   GOSUB 9050                                                        ' load splash screen and sprites
 525   GOTO 501                                                          ' repeat
 
+' Check high score
+600 IF SC < HS THEN RETURN
+601   HS = HS + 1000                                    ' increment high score
+602   GOSUB 8040                                        ' show score 
+603   IF LV >= 7 THEN RETURN
+604     LV = LV + 1                                     ' add 1 life
+605     GOSUB 8080                                      ' show player remaining lives
+606     CMD PLYSOUND 4,1                                ' new life sound
+607     RETURN 
+
 ' Player jumping button
 800 IF LVA(1) = 7 THEN RETURN                           ' ignore if player at home
 801 IF PJ <> 0 THEN RETURN                              ' ignore if player is already jumping
@@ -241,20 +253,22 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 823 GOTO 260                                            ' collision logic
 
 ' Next stage logic
-900 LR = LR + 1 
-901 SC = SC + 100
-902 GOTO 100                                            ' go to next stage
+900 LR = LR + 1                                         ' add level row number in resource CSV
+901 SC = SC + 100 
+902 GOSUB 600                                           ' check high score
+903 GOTO 100                                            ' go to next stage
 
 ' Player at home logic
 910 FOR I = 1 TO 50                                     ' add 5000 points showing the score
 911   SC = SC + 10 
 912   GOSUB 8040                                        ' show score
 913   IF (I MOD 4) = 0 THEN CMD PLYSOUND 1, 2
-914 NEXT
-915 I = 3 : GOSUB 9020                                  ' wait 3 seconds
-916 CMD PLYMUTE
-917 LR = LR + 1
-918 GOTO 100
+914   GOSUB 600                                         ' check high score
+915 NEXT
+920 I = 3 : GOSUB 9020                                  ' wait 3 seconds
+921 CMD PLYMUTE
+922 LR = LR + 1                                         ' add level row number in resource CSV
+923 GOTO 100
 
 ' Game over logic
 950 GOSUB 8080                                          ' show player remaining lives
@@ -323,7 +337,7 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 
 ' Show lives
 8080 X = 1 : Y = 22
-8081 FOR I = 2 TO 6
+8081 FOR I = 2 TO 7
 8082   IF I <= LV THEN C = 58 ELSE C = 32
 8083   PUT TILE C,(X, Y)
 8084   X = X + 2
