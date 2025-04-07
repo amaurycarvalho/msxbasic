@@ -73,6 +73,7 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 113 GOSUB 8050                                          ' show player sprite
 114 GOSUB 8080                                          ' show player remaining lives
 115 GOSUB 320                                           ' show remaining objects on screen
+116 GOSUB 600                                           ' check high score
 
 ' Gameplay loop
 120 GOSUB 200                                           ' player logic 
@@ -188,10 +189,9 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 
 ' Player loses 1 life logic
 340 SC = SC + 100                                       ' increment score
-341 GOSUB 600                                           ' check high score
-342 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
-343 RST = 1                                             ' restart level
-344 RETURN
+341 IF LV > 0 THEN LV = LV - 1                          ' decrement lives
+342 RST = 1                                             ' restart level
+343 RETURN
 
 ' Level data initialization
 400 PX = 0 : PY = 111 : PS = 0 : PJ = 0 : PI = 4        ' player x, y, sprite, jumping flag and walking step
@@ -255,8 +255,7 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 ' Next stage logic
 900 LR = LR + 1                                         ' add level row number in resource CSV
 901 SC = SC + 100 
-902 GOSUB 600                                           ' check high score
-903 GOTO 100                                            ' go to next stage
+902 GOTO 100                                            ' go to next stage
 
 ' Player at home logic
 910 FOR I = 1 TO 50                                     ' add 5000 points showing the score
@@ -272,8 +271,8 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 
 ' Game over logic
 950 GOSUB 8080                                          ' show player remaining lives
-951 GOSUB 8040                                          ' show score
-952 I = 2 : GOSUB 9020                                  ' wait 2 seconds
+'951 GOSUB 8040                                          ' show score
+952 I = 3 : GOSUB 9020                                  ' wait 3 seconds
 953 GOSUB 9010                                          ' wait for player hit a button
 954 GOTO 20                                             ' restart the game
 
