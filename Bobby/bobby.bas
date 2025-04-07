@@ -264,7 +264,7 @@ FILE "img/flanders.SC2"                                 ' 13 - QR-Code for a Bob
 913   IF (I MOD 4) = 0 THEN CMD PLYSOUND 1, 2
 914   GOSUB 600                                         ' check high score
 915 NEXT
-920 I = 3 : GOSUB 9020                                  ' wait 3 seconds
+920 I = 4 : GOSUB 9020                                  ' wait 4 seconds
 921 CMD PLYMUTE
 922 LR = LR + 1                                         ' add level row number in resource CSV
 923 GOTO 100
