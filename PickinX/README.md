@@ -26,9 +26,9 @@ Good Luck and have fun, Pickers!
 
 ## History
 
-1.2 Current release;
-1.1 Bug fix and sound/graphics improvements;
-1.0 MSXDEV21 release.
+* 1.2 Current release;
+* 1.1 Bug fix and sound/graphics improvements;
+* 1.0 MSXDEV21 release.
 
 ## Source code
 

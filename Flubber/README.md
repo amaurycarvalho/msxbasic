@@ -22,9 +22,9 @@ Good Luck!
 
 ## History
 
-1.2 Speed fix on 50hz machines;
-1.1 Graphics and game over mechanics improvements;
-1.0 Initial release.
+* 1.2 Speed fix on 50hz machines;
+* 1.1 Graphics and game over mechanics improvements;
+* 1.0 Initial release.
 
 ## Source code
 
