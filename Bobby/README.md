@@ -1,5 +1,5 @@
 # BOBBY IS STILL GOING HOME
-Game demo source code written in MSX BASIC to be compiled with MSXBAS2ROM compiler
+Game source code written in MSX BASIC to be compiled with MSXBAS2ROM compiler
 
 ## Game info
 
@@ -19,10 +19,6 @@ Game demo source code written in MSX BASIC to be compiled with MSXBAS2ROM compil
 ````
        msxbas2rom -x bobby.bas
 ````
-
-### Running online
-
-* [Game emulation via WebMSX](http://webmsx.org/?rom=https://raw.githubusercontent.com/amaurycarvalho/msxbasic/main/Bobby/bobby%5BKonamiSCC%5D.rom)
 
 ### Repository
 
