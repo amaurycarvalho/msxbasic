@@ -37,7 +37,7 @@ Game source code written in MSX BASIC to be compiled with MSXBAS2ROM compiler
 
 * MSXBAS2ROM is a command line tool, so you need to use a terminal shell on your PC to compile these projects;
 * All .BAS files are in plain text format, so they can be opened by any text editor;
-* .SCn are MSX BASIC "BSAVE,S" native binary format screen files exported from [MSX Screen Converter](https://msx.jannone.org/conv/);
+* .SCn are MSX BASIC "BSAVE,S" native binary format screen files exported from [MSX Screen Converter](https://msx.jannone.org/conv/) and edited with [nMSXTiles](https://launchpad.net/nmsxtiles);
 * .SPR files are in plain text format and can be opened by any text editor and edited by [Tiny Sprite](https://msx.jannone.org/tinysprite/tinysprite.html) as well;
 * .AKS files are [Arkos Tracker 3](https://julien-nevo.com/at3test/index.php/download/) projects;
 * .AKM files are songs exported by Arkos Tracker 3 in minimalist format;
