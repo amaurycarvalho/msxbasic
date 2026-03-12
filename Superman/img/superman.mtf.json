@@ -1,0 +1,17 @@
+{
+  "header": {
+    "app": "MSX Tile Forge",
+    "version": "1.0.0",
+  },
+  "settings": {
+    "name": "superman",
+    "description": "Text",
+    "screenmode": "4",
+  },
+  "assets": {
+    "palette": "superman.mtf.pal",
+    "tiles": "superman.mtf.til",
+    "supertiles": "superman.mtf.super",
+    "map": "superman.mtf.map",
+  }
+}
