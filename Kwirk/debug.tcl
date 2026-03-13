@@ -18,12 +18,27 @@ set rom [file rootname $noi_file]
 
 puts "ROM base name: $rom"
 
-puts "Loading debug symbols..."
-debug load_symbols $noi_file
+proc load_symbols {} {
+    global noi_file
 
-puts "Setting initial breakpoint..."
-debug set_bp START_PGM
+    puts "Loading debug symbols: $noi_file"
+    debug symbols load $noi_file NoICE
 
-debug show
+    # resolve symbol
+    if {[catch {debug symbols lookup -name START_PGM} result]} {
+        puts "Symbol START_PGM not found."
+        return
+    }
 
-puts "Debugger ready."
+    # extract address
+    set entry [lindex $result 0]
+    set addr [dict get $entry value]
+    
+    puts "Setting breakpoint at start of the program: $addr"
+    debug breakpoint create -address $addr
+
+    puts "Debugger ready."
+}
+
+# run after emulator startup
+after 1000 load_symbols
