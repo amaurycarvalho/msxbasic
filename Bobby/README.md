@@ -10,7 +10,8 @@ Game source code written in MSX BASIC to be compiled with MSXBAS2ROM compiler
 
 * [Wikipedia](https://en.wikipedia.org/wiki/Bobby_is_Going_Home);
 * [Game Review](https://www.rfgeneration.com/news/2600/Banana-s-Rotten-Reviews-Bobby-Is-Going-Home-3473.php);
-* [Original Atari 2600 version emulation](https://www.retrogames.cz/play_192-Atari2600.php).
+* [Original Atari 2600 version emulation](https://www.retrogames.cz/play_192-Atari2600.php);
+* [MSXdev25 contest](https://www.msxdev.org/2025/09/18/msxdev25-01-bobby-is-still-going-home/).
 
 ## Source code
 
