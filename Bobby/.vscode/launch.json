@@ -5,8 +5,10 @@
       "name": "Run",
       "type": "node-terminal",
       "request": "launch",
-      "command": "make run; exit",
-      "cwd": "${workspaceFolder}"
+      "command": "exit",
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Debug on openMSX"
     }
   ]
 }
+    

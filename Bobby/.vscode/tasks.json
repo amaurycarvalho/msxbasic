@@ -4,7 +4,11 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "make all",
+
+      "command": "msxbas2rom",
+
+      "args": ["${file}", "-a", "-q", "--noi"],
+
       "group": {
         "kind": "build",
         "isDefault": true
@@ -20,21 +24,45 @@
         }
       }
     },
+
     {
-      "label": "clean",
+      "label": "Run on openMSX",
+      "dependsOn": ["build"],
       "type": "shell",
-      "command": "make clean",
-      "problemMatcher": []
-    },
-    {
-      "label": "test",
-      "type": "shell",
-      "command": "make test",
+      "command": "flatpak",
+      "args": [
+        "run","org.openmsx.openMSX",
+        "-command",
+        "'user_setting create string fileBasenameNoExtension \"File base name no extension\" \"${workspaceFolder}/${fileBasenameNoExtension}\"'",
+        "-command",
+        "'user_setting create boolean debugMode \"Debug mode\" false'",
+        "-script",
+        ".vscode/debug.tcl"
+      ],
       "group": {
         "kind": "test",
         "isDefault": true
-      },
-      "problemMatcher": []
+      }
+    },
+
+    {
+      "label": "Debug on openMSX",
+      "dependsOn": ["build"],
+      "type": "shell",
+      "command": "flatpak",
+      "args": [
+        "run","org.openmsx.openMSX",
+        "-command",
+        "'user_setting create string fileBasenameNoExtension \"File base name no extension\" \"${workspaceFolder}/${fileBasenameNoExtension}\"'",
+        "-command",
+        "'user_setting create boolean debugMode \"Debug mode\" true'",
+        "-script",
+        ".vscode/debug.tcl"
+      ],
+      "group": {
+        "kind": "test"
+      }
     }
   ]
 }
+    
